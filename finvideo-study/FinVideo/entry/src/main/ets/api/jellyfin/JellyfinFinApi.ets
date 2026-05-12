@@ -353,20 +353,52 @@ export class JellyfinFinApi implements FinVideoApi {
     let url: string | undefined | null
     switch (source.Protocol) {
       case MediaProtocol.File:
-        url = await this.jellyfin.getVideosApi().getVideoStreamUrl({
-          itemId: id,
-          static: true,
-          mediaSourceId: id
-        })
+        url = this.buildStaticVideoStreamUrl(id, source.Id || id, this.getStreamContainer(source.Container))
         break
       case MediaProtocol.Http:
         url = source.Path
         break
     }
     if (url) {
-      return {url: url, sdr: sdr}
+      return {url: this.appendPlaybackToken(url), sdr: sdr}
     }
     throw new Error("Source not support.")
+  }
+
+  private buildStaticVideoStreamUrl(id: string, mediaSourceId: string, container: string): string {
+    let address = this.activeInfo!.addressInfo.address
+    let normalizedAddress = address.endsWith('/') ? address.substring(0, address.length - 1) : address
+    // Jellyfin's generated SDK field is named _static because "static" is reserved
+    // in ArkTS, but the HTTP endpoint expects the real query key static=true.
+    return `${normalizedAddress}/Videos/${encodeURIComponent(id)}/stream.${encodeURIComponent(container)}?static=true&mediaSourceId=${encodeURIComponent(mediaSourceId)}`
+  }
+
+  private appendPlaybackToken(url: string): string {
+    let token = this.activeInfo?.userInfo.accessToken
+    if (!token || token.length <= 0 || url.includes('api_key=')) {
+      return url
+    }
+    // AVPlayer only receives a bare URL, so the Jellyfin auth token must travel
+    // in the query string for static media streaming requests.
+    let separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}api_key=${encodeURIComponent(token)}`
+  }
+
+  private getStreamContainer(container?: string | null): string {
+    if (!container || container.length <= 0) {
+      return 'mp4'
+    }
+    let containers: string[] = []
+    container.split(',').forEach((item: string) => {
+      let value = item.trim()
+      if (value.length > 0) {
+        containers.push(value)
+      }
+    })
+    if (containers.includes('mp4')) {
+      return 'mp4'
+    }
+    return containers[0] || 'mp4'
   }
 
   async search(keyword: string): Promise<FinItem[]> {

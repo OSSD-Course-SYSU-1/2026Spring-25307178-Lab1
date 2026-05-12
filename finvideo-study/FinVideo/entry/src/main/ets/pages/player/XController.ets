@@ -143,7 +143,10 @@ export class XController extends XComponentController {
     } else if (impl === PlayerImpl.WL_MEDIA){
       implName = "WLMedia"
     } else {
-      implName = source.sdr ? "WLMedia" : "AVPlayer"
+      // WLPlayer's x86_64 native library can crash in the DevEco emulator.
+      // Keep explicit WLMedia selection available, but make AUTO use AVPlayer
+      // for a stable local coursework/demo playback path.
+      implName = "AVPlayer"
     }
 
     // 创建或重置播放器
