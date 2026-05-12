@@ -9,7 +9,7 @@ import { FinItem } from "@ohpg/fin-core";
  */
 export interface GroupInfo {
 
-  type: 'Continue' | 'Next' | 'Normal'
+  type: 'Continue' | 'Next' | 'Normal' | 'Recent'
 
   group?: FinItem
 

@@ -11,4 +11,9 @@ export class AppEvents {
    */
   public static readonly EVENT_SORT_INFO_CHANGED = "event_sort_info_changed"
 
+  /**
+   * Recent playback list change
+   */
+  public static readonly EVENT_RECENT_PLAYBACK_CHANGED = "event_recent_playback_changed"
+
 }

@@ -44,4 +44,8 @@ export class PlayerViewModel extends AppViewModel {
     return this.itemDto!
   }
 
+  recordRecentPlayback(item: FinItem): void {
+    this.repository.recordRecentPlayback(item)
+  }
+
 }

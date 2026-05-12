@@ -1,4 +1,5 @@
-import { FinItem, FinItemData, FinItemType, FinPage, ServerType } from "@ohpg/fin-core";
+import { preferences } from "@kit.ArkData";
+import { AppEventHub, AppEvents, FinItem, FinItemData, FinItemType, FinPage, ServerType } from "@ohpg/fin-core";
 import { FinRepository } from "@ohpg/fin-framework";
 import { FinVideoApi } from "../api/FinVideoApi";
 import { FinVideoApiFactory } from "../api/FinVideoApiFactory";
@@ -13,8 +14,15 @@ import { FinItemSource } from "../entity/FinItemSource";
  */
 export class Repository extends FinRepository {
 
+  private static readonly RECENT_PLAYBACK_LIMIT = 8
+
+  private static readonly KEY_RECENT_PLAYBACK = "recent_playback_items"
+
+  private readonly recentPreference: preferences.Preferences
+
   constructor(context: Context) {
     super(context, new FinVideoApiFactory(context))
+    this.recentPreference = preferences.getPreferencesSync(context, { name: "recent_playback" })
   }
 
   public getSupportServer(): ServerType {
@@ -142,6 +150,51 @@ export class Repository extends FinRepository {
    */
   public getMediaSource(id: string): Promise<FinItemSource> {
     return this.requireApi().getItemSource(id)
+  }
+
+  /**
+   * 读取本地最近播放记录；存储键按服务器和用户隔离，避免多账号记录混在一起。
+   */
+  public getRecentPlaybackItems(): Array<FinItem> {
+    let raw = this.recentPreference.getSync(this.getRecentPlaybackKey(), "") as string
+    if (raw.length <= 0) {
+      return []
+    }
+    try {
+      return JSON.parse(raw) as Array<FinItem>
+    } catch (error) {
+      return []
+    }
+  }
+
+  /**
+   * 记录本次打开的媒体，并通知首页刷新“最近播放”分组。
+   */
+  public recordRecentPlayback(item: FinItem): void {
+    if (!item || !item.id) {
+      return
+    }
+    let items = this.getRecentPlaybackItems()
+    let recentItems = items.filter((value: FinItem) => value.id !== item.id)
+    recentItems.unshift(JSON.parse(JSON.stringify(item)) as FinItem)
+    if (recentItems.length > Repository.RECENT_PLAYBACK_LIMIT) {
+      recentItems = recentItems.slice(0, Repository.RECENT_PLAYBACK_LIMIT)
+    }
+    this.recentPreference.putSync(this.getRecentPlaybackKey(), JSON.stringify(recentItems))
+    this.recentPreference.flush()
+    AppEventHub.emit(AppEvents.EVENT_RECENT_PLAYBACK_CHANGED)
+  }
+
+  /**
+   * 登录信息还没准备好时使用默认键，保证首次进入播放器也能落盘。
+   */
+  private getRecentPlaybackKey(): string {
+    let serverId = this.activeInfo?.serverInfo.serverId
+    let userId = this.activeInfo?.userInfo.userId
+    if (serverId && userId) {
+      return `${Repository.KEY_RECENT_PLAYBACK}_${serverId}_${userId}`
+    }
+    return Repository.KEY_RECENT_PLAYBACK
   }
 
   /**

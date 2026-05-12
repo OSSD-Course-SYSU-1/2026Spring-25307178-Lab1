@@ -171,6 +171,10 @@ struct PlayerPage {
 
   private updateItem(item?: FinItem) {
     this.itemDto = item
+    if (item) {
+      // 从首页、剧集列表或上一集/下一集进入时都统一记录一次。
+      this.viewModel.recordRecentPlayback(item)
+    }
     let array = this.viewModel.itemDtoArray
     if (!this.itemDto || !array) {
       this.canSkipPre = false

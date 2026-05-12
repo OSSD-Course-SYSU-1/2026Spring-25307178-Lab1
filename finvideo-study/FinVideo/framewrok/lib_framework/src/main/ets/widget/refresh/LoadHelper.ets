@@ -14,11 +14,16 @@ export class LoadHelper {
     this.load('Refresh')
   }
 
+  private recentPlaybackChanged = () => {
+    this.load('Refresh')
+  }
+
   constructor(model: AppModel, source: RefreshRepository, controller: RefreshController) {
     this.model = model
     this.source = source
     this.controller = controller
     AppEventHub.on(AppEvents.EVENT_ACTIVE_INFO_CHANGED, this.activeInfoChanged)
+    AppEventHub.on(AppEvents.EVENT_RECENT_PLAYBACK_CHANGED, this.recentPlaybackChanged)
   }
 
   public load(type: LoadType = "Init") {
@@ -49,6 +54,7 @@ export class LoadHelper {
 
   public clear() {
     AppEventHub.off(AppEvents.EVENT_ACTIVE_INFO_CHANGED, this.activeInfoChanged)
+    AppEventHub.off(AppEvents.EVENT_RECENT_PLAYBACK_CHANGED, this.recentPlaybackChanged)
   }
 
 }

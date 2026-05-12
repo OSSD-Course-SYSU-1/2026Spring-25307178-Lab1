@@ -74,7 +74,7 @@ struct MainNormalGroup {
       List({space: CommonConstants.SPACE_12}) {
         ForEach(this.item?.items, (item: FinItem) => {
           ListItem() {
-            if (this.item?.type === "Normal") {
+            if (this.item?.type === "Normal" || this.item?.type === "Recent") {
               MediaItem({item: item, itemWidth: 140})
             } else {
               EpisodeItem({item: item, progress: this.item?.type === 'Continue'})

@@ -17,6 +17,18 @@ export class MainViewModel extends ListViewModel {
 
   async loadData(type: LoadType): Promise<void> {
     let groupArray = new Array<GroupInfo>()
+    // 最近播放放在首页顶部，方便演示时快速回到刚打开过的视频。
+    let recentItems = this.repository.getRecentPlaybackItems()
+    if (recentItems && recentItems.length > 0) {
+      groupArray.push({
+        type: "Recent",
+        group: {
+          id: "",
+          name: "最近播放"
+        },
+        items: recentItems
+      })
+    }
     let resumeItems = await this.repository.getResumeItems()
     if (resumeItems && resumeItems.length > 0) {
       groupArray.push({
