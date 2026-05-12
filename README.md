@@ -12,6 +12,7 @@ users enter numbers, tap the sort button, and read the sorted output on screen.
 - Merge sort implementation without calling a built-in sort helper.
 - Supports numbers separated by spaces, commas, or new lines.
 - Sort direction can be toggled between ascending and descending output.
+- Displays count, minimum, maximum, sum, and average for the parsed input.
 
 ## Command Line Tools
 

@@ -5,6 +5,7 @@ struct Index {
   @State outputText: string = '1 2 3 4 5';
   @State errorText: string = '';
   @State sortDescending: boolean = false;
+  @State statsText: string = 'Count: 5 | Min: 1 | Max: 5 | Sum: 15 | Avg: 3';
 
   private parseInput(text: string): number[] {
     const cleaned = text.trim();
@@ -53,6 +54,27 @@ struct Index {
     return result.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
   }
 
+  private formatNumber(value: number): string {
+    return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+  }
+
+  private buildStats(numbers: number[]): string {
+    let min = numbers[0];
+    let max = numbers[0];
+    let sum = 0;
+
+    for (let index = 0; index < numbers.length; index++) {
+      const current = numbers[index];
+      min = Math.min(min, current);
+      max = Math.max(max, current);
+      sum += current;
+    }
+
+    const average = sum / numbers.length;
+    // Stats are derived from the parsed input so validation, sorting, and summary stay consistent.
+    return `Count: ${numbers.length} | Min: ${this.formatNumber(min)} | Max: ${this.formatNumber(max)} | Sum: ${this.formatNumber(sum)} | Avg: ${this.formatNumber(average)}`;
+  }
+
   private runSort(): void {
     try {
       const numbers = this.parseInput(this.inputText);
@@ -62,9 +84,11 @@ struct Index {
         sortedNumbers.reverse();
       }
       this.outputText = sortedNumbers.join(' ');
+      this.statsText = this.buildStats(numbers);
       this.errorText = '';
     } catch (error) {
       this.outputText = '';
+      this.statsText = '';
       this.errorText = error instanceof Error ? error.message : 'Unable to sort the input.';
     }
   }
@@ -168,6 +192,12 @@ struct Index {
             .padding(16)
             .backgroundColor('#E8F5E9')
             .borderRadius(14)
+
+          Text(this.statsText)
+            .fontSize(14)
+            .fontColor('#52616B')
+            .width('100%')
+            .padding({ left: 4, right: 4 })
         }
       }
       .width('100%')
