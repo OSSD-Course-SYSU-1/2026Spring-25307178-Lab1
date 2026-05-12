@@ -100,6 +100,19 @@ struct Index {
     }
   }
 
+  private loadSampleInput(sampleText: string): void {
+    // Preset inputs make it easy to demonstrate integers, decimals, and negative values quickly.
+    this.inputText = sampleText;
+    this.runSort();
+  }
+
+  private clearInput(): void {
+    this.inputText = '';
+    this.outputText = '';
+    this.statsText = '';
+    this.errorText = '';
+  }
+
   build() {
     Column({ space: 22 }) {
       Column({ space: 8 }) {
@@ -150,6 +163,42 @@ struct Index {
         .width('100%')
         .justifyContent(FlexAlign.SpaceBetween)
 
+        Row({ space: 8 }) {
+          Button('Integers')
+            .layoutWeight(1)
+            .height(36)
+            .fontSize(13)
+            .fontColor('#0B5CAD')
+            .backgroundColor('#E6F2FF')
+            .borderRadius(12)
+            .onClick(() => {
+              this.loadSampleInput('9 4 7 1 6 2');
+            })
+
+          Button('Decimals')
+            .layoutWeight(1)
+            .height(36)
+            .fontSize(13)
+            .fontColor('#0B5CAD')
+            .backgroundColor('#E6F2FF')
+            .borderRadius(12)
+            .onClick(() => {
+              this.loadSampleInput('3.5, 2.25, 8.75, 1.5');
+            })
+
+          Button('Mixed')
+            .layoutWeight(1)
+            .height(36)
+            .fontSize(13)
+            .fontColor('#0B5CAD')
+            .backgroundColor('#E6F2FF')
+            .borderRadius(12)
+            .onClick(() => {
+              this.loadSampleInput('-4 12 0 -9 3 3');
+            })
+        }
+        .width('100%')
+
         Button('Sort Numbers')
           .width('100%')
           .height(48)
@@ -160,6 +209,17 @@ struct Index {
           .borderRadius(14)
           .onClick(() => {
             this.runSort();
+          })
+
+        Button('Clear Input')
+          .width('100%')
+          .height(40)
+          .fontSize(15)
+          .fontColor('#52616B')
+          .backgroundColor('#F1F4F8')
+          .borderRadius(12)
+          .onClick(() => {
+            this.clearInput();
           })
       }
       .width('100%')
