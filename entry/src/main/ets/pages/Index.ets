@@ -4,6 +4,7 @@ struct Index {
   @State inputText: string = '5 1 4 2 3';
   @State outputText: string = '1 2 3 4 5';
   @State errorText: string = '';
+  @State sortDescending: boolean = false;
 
   private parseInput(text: string): number[] {
     const cleaned = text.trim();
@@ -55,11 +56,23 @@ struct Index {
   private runSort(): void {
     try {
       const numbers = this.parseInput(this.inputText);
-      this.outputText = this.mergeSort(numbers).join(' ');
+      const sortedNumbers = this.mergeSort(numbers);
+      // The selected direction is applied after merge sort so the core algorithm stays stable.
+      if (this.sortDescending) {
+        sortedNumbers.reverse();
+      }
+      this.outputText = sortedNumbers.join(' ');
       this.errorText = '';
     } catch (error) {
       this.outputText = '';
       this.errorText = error instanceof Error ? error.message : 'Unable to sort the input.';
+    }
+  }
+
+  private toggleSortDirection(): void {
+    this.sortDescending = !this.sortDescending;
+    if (this.errorText.length === 0 && this.outputText.length > 0) {
+      this.runSort();
     }
   }
 
@@ -94,6 +107,24 @@ struct Index {
           .onChange((value: string) => {
             this.inputText = value;
           })
+
+        Row({ space: 10 }) {
+          Text('Order')
+            .fontSize(16)
+            .fontColor('#52616B')
+
+          Button(this.sortDescending ? 'Descending' : 'Ascending')
+            .height(38)
+            .fontSize(15)
+            .fontColor(Color.White)
+            .backgroundColor(this.sortDescending ? '#7B2CBF' : '#0B5CAD')
+            .borderRadius(12)
+            .onClick(() => {
+              this.toggleSortDirection();
+            })
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.SpaceBetween)
 
         Button('Sort Numbers')
           .width('100%')

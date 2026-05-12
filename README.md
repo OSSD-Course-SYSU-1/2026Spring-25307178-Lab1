@@ -11,6 +11,7 @@ users enter numbers, tap the sort button, and read the sorted output on screen.
 - ArkTS UI implemented in `entry/src/main/ets/pages/Index.ets`.
 - Merge sort implementation without calling a built-in sort helper.
 - Supports numbers separated by spaces, commas, or new lines.
+- Sort direction can be toggled between ascending and descending output.
 
 ## Command Line Tools
 
