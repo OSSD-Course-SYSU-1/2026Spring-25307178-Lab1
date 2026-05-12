@@ -1,0 +1,100 @@
+import { CommonConstants } from "../../common/CommonConstants"
+import { FavouriteViewModel } from "./FavouriteViewModel"
+import { ListRefreshView } from "@ohpg/fin-framework"
+import { HomeToolBar } from "../../../widget/bar/HomeToolBar"
+import { CategoryToolBar } from "../../../widget/bar/CategoryToolBar"
+import { EpisodeItem } from "../../../widget/media/EpisodeItem"
+import { MediaItem } from "../../../widget/media/MediaItem"
+import { GroupInfo } from "../../../entity/GroupInfo"
+import { FinItem, FinItemType } from "@ohpg/fin-core"
+
+/**
+ * @Author peerless2012
+ * @Email peerless2012@126.com
+ * @DateTime 2024/11/7 20:27
+ * @Version V1.0
+ * @Description Main
+ */
+@Component
+export struct FavouriteComponent {
+
+  private viewModel = new FavouriteViewModel(getContext())
+
+  @Builder
+  favouriteGroupBuilder(group: GroupInfo, index: number) {
+    FavouriteGroup({item: group})
+  }
+
+  build() {
+    Column() {
+
+      HomeToolBar({
+        title: $r('app.string.home_favourite')
+      })
+
+      ListRefreshView({
+        source: this.viewModel,
+        itemLayout: this.favouriteGroupBuilder,
+        listAttribute: (attr) => {
+          attr.divider = {
+            color: Color.Transparent,
+            strokeWidth: 16
+          }
+          attr.width = CommonConstants.FULL_PERCENT
+          attr.height = CommonConstants.FULL_PERCENT
+        },
+      })
+        .width(CommonConstants.FULL_PERCENT)
+        .layoutWeight(1)
+    }
+  }
+
+  aboutToDisappear(): void {
+    this.viewModel.onClear()
+  }
+
+}
+
+@Component
+@Reusable
+struct FavouriteGroup {
+
+  @Require @State item?: GroupInfo = undefined
+
+  aboutToReuse(params: Record<string, object>): void {
+    this.item = params['item'] as GroupInfo
+  }
+
+  build() {
+    Column() {
+      // title
+      CategoryToolBar({
+        item: this.item
+      })
+      // list
+      List({space: 8}) {
+        ForEach(this.item?.items, (item: FinItem) => {
+          ListItem() {
+            if (item.type === FinItemType.Episode) {
+              EpisodeItem({item: item})
+            } else {
+              MediaItem({item: item, itemWidth: 140})
+            }
+          }
+        })
+      }
+      .contentStartOffset(CommonConstants.SPACE_16)
+      .contentEndOffset(CommonConstants.SPACE_16)
+      .width('100%')
+      .scrollBar(BarState.Off)
+      .listDirection(Axis.Horizontal)
+    }
+    .alignItems(HorizontalAlign.Start)
+    .width('100%')
+  }
+
+  aboutToRecycle(): void {
+
+  }
+
+}

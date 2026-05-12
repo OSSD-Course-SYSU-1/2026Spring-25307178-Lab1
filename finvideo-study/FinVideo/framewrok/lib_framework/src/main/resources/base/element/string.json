@@ -1,0 +1,104 @@
+{
+  "string": [
+    {
+      "name": "server_address",
+      "value": "服务器地址"
+    },
+    {
+      "name": "server_connect",
+      "value": "连接"
+    },
+    {
+      "name": "login_user_name",
+      "value": "用户名"
+    },
+    {
+      "name": "login_psw",
+      "value": "密码"
+    },
+    {
+      "name": "server_alias",
+      "value": "别名"
+    },
+    {
+      "name": "login_auth",
+      "value": "登录"
+    },
+    {
+      "name": "login_auth_tips",
+      "value": "*仅支持%s协议*"
+    },
+    {
+      "name": "error_alias_empty",
+      "value": "别名不能为空"
+    },
+    {
+      "name": "error_url_empty",
+      "value": "服务器地址不能为空"
+    },
+    {
+      "name": "error_url_not_start_with_http",
+      "value": "服务器地址必须以http或https开头"
+    },
+    {
+      "name": "error_url_not_validate",
+      "value": "服务器地址格式错误"
+    },
+    {
+      "name": "error_user_name_empty",
+      "value": "用户名不能为空"
+    },
+    {
+      "name": "error_user_psw_empty",
+      "value": "密码不能为空"
+    },
+    {
+      "name": "page_server",
+      "value": "服务器"
+    },
+    {
+      "name": "page_user",
+      "value": "用户"
+    },
+    {
+      "name": "page_address",
+      "value": "地址"
+    },
+    {
+      "name": "address_add",
+      "value": "添加地址"
+    },
+    {
+      "name": "address_can_not_change",
+      "value": "当前地址切换成功"
+    },
+    {
+      "name": "address_changed",
+      "value": "地址切换成功"
+    },
+    {
+      "name": "menu_delete",
+      "value": "删除"
+    },
+    {
+      "name": "address_delete_success",
+      "value": "地址删除成功"
+    },
+    {
+      "name": "user_add",
+      "value": "添加用户"
+    },
+    {
+      "name": "user_changed",
+      "value": "用户切换成功"
+    },
+    {
+      "name": "user_can_not_delete",
+      "value": "当前用户无法删除"
+    },
+    {
+      "name": "user_delete_success",
+      "value": "用户已删除"
+    }
+  ]
+}

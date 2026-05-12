@@ -1,0 +1,15 @@
+{
+  "module": {
+    "name": "jellyfin",
+    "type": "har",
+    "deviceTypes": [
+      "phone",
+      "tablet",
+      "2in1",
+      "car"
+    ],
+    "requestPermissions": [
+      {"name": "ohos.permission.INTERNET"}
+    ]
+  }
+}

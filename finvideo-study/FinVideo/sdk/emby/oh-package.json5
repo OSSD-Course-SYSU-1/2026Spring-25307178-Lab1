@@ -1,0 +1,12 @@
+{
+  "name": "@ohpg/emby",
+  "version": "0.1.0",
+  "description": "Emby sdk for ArkTS.",
+  "main": "Index.ets",
+  "author": "peerless2012",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@ohos/axios": "2.2.6",
+    "@ohpg/network": "file:../network"
+  }
+}

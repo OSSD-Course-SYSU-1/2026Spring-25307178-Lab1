@@ -1,0 +1,12 @@
+{
+  "name": "@ohpg/fin-framework",
+  "version": "1.0.0",
+  "description": "Fin framework sdk.",
+  "main": "Index.ets",
+  "author": "peerless2012",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@abner/refresh": "1.4.3",
+    "@ohpg/fin-core": "file:../lib_core"
+  }
+}

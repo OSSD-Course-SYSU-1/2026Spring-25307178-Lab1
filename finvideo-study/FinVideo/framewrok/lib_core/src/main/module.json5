@@ -1,0 +1,12 @@
+{
+  "module": {
+    "name": "core",
+    "type": "har",
+    "deviceTypes": [
+      "phone",
+      "tablet",
+      "2in1",
+      "car"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@ohpg/network",
+  "version": "0.1.0",
+  "description": "Network sdk for ArkTS.",
+  "main": "Index.ets",
+  "author": "peerless2012",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@ohos/axios": "2.2.6"
+  }
+}

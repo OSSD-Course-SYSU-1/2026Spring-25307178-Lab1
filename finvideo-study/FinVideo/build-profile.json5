@@ -1,0 +1,80 @@
+{
+  "app": {
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.3(15)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      },
+      {
+        "name": "publish",
+        "signingConfig": "publish",
+        "compatibleSdkVersion": "5.0.3(15)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          },
+          "nativeLib": {
+            "filter": {
+              "excludes": [
+                "**/x86_64/*.so"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default",
+            "publish"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "network",
+      "srcPath": "./sdk/network"
+    },
+    {
+      "name": "jellyfin",
+      "srcPath": "./sdk/jellyfin"
+    },
+    {
+      "name": "emby",
+      "srcPath": "./sdk/emby"
+    },
+    {
+      "name": "core",
+      "srcPath": "./framewrok/lib_core"
+    },
+    {
+      "name": "framework",
+      "srcPath": "./framewrok/lib_framework"
+    }
+  ]
+}

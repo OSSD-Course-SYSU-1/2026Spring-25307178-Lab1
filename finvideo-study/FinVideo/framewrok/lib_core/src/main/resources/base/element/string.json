@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "dialog_loading",
+      "value": "加载中..."
+    },
+    {
+      "name": "privacy_dialog_title",
+      "value": "温馨提示"
+    },
+    {
+      "name": "edit_server",
+      "value": "服务器"
+    },
+    {
+      "name": "edit_user",
+      "value": "用户"
+    },
+    {
+      "name": "edit_address",
+      "value": "地址"
+    }
+  ]
+}

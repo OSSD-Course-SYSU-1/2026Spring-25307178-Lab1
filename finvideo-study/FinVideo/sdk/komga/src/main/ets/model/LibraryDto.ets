@@ -1,0 +1,32 @@
+export interface LibraryDto {
+  analyzeDimensions: boolean
+  convertToCbz: boolean
+  emptyTrashAfterScan: boolean
+  hashFiles: boolean
+  hashKoreader: boolean
+  hashPages: boolean
+  id: string
+  importBarcodeIsbn: boolean
+  importComicInfoBook: boolean
+  importComicInfoCollection: boolean
+  importComicInfoReadList: boolean
+  importComicInfoSeries: boolean
+  importComicInfoSeriesAppendVolume: boolean
+  importEpubBook: boolean
+  importEpubSeries: boolean
+  importLocalArtwork: boolean
+  importMylarSeries: boolean
+  name: string
+  oneshotsDirectory: string
+  repairExtensions: boolean
+  root: string
+  scanCbx: boolean
+  scanDirectoryExclusionsExpand: Array<string>
+  scanEpub: boolean
+  scanForceModifiedTime: boolean
+  scanIntervalExpand: string
+  scanOnStartup: boolean
+  scanPdf: boolean
+  seriesCoverExpand: string
+  unavailable: boolean
+}
