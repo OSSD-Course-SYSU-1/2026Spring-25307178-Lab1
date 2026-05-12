@@ -7,6 +7,7 @@ import { PlayerImpl } from "../../player/PlayerImpl"
 import { WLPlayer } from "../../player/WLPlayer"
 import { AVPlayer } from "../../player/AVPlayer"
 import { FinItem } from "@ohpg/fin-core"
+import { image } from "@kit.ImageKit"
 
 /**
  * @Author peerless2012
@@ -30,6 +31,8 @@ export class XController extends XComponentController {
   private windowHeight = 0
 
   private avFitMode: 'Inside' | 'Crop' = 'Inside'
+
+  private currentSourceUrl?: string
 
   player?: AbstractPlayer
 
@@ -134,6 +137,7 @@ export class XController extends XComponentController {
   async setData(item: FinItem): Promise<void> {
     // 加载播放媒体源
     let source = await this.repository.getMediaSource(item.id)
+    this.currentSourceUrl = source.url
 
     // 根据偏好和视频是否是hdr，决定调用的播放器
     let impl = this.appPrefer.getPlayerImpl()
@@ -176,6 +180,26 @@ export class XController extends XComponentController {
       await this.player.reset()
     }
     await this.player.setData(source.url, item)
+  }
+
+  /**
+   * 按当前播放进度从视频源解码真实帧，避免 Surface 窗口截图出现黑屏或只截到控件。
+   */
+  async captureFrame(positionMs: number): Promise<image.PixelMap> {
+    if (!this.currentSourceUrl) {
+      throw new Error("当前没有可截取的视频源")
+    }
+    let extractor = await media.createAVMetadataExtractor()
+    try {
+      extractor.setUrlSource(this.currentSourceUrl)
+      return await extractor.fetchFrameByTime(
+        Math.max(positionMs, 0) * 1000,
+        media.AVImageQueryOptions.AV_IMAGE_QUERY_CLOSEST,
+        {}
+      )
+    } finally {
+      await extractor.release()
+    }
   }
 
   onProgressChange(callback: Callback<number>) {

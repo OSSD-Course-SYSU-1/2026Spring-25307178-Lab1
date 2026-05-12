@@ -11,7 +11,13 @@ import { XController } from './XController'
 import { deviceInfo } from '@kit.BasicServicesKit'
 import { KeyCode } from '@kit.InputKit'
 import { image } from '@kit.ImageKit'
-import { fileIo } from '@kit.CoreFileKit'
+import { fileIo, fileUri } from '@kit.CoreFileKit'
+import { photoAccessHelper } from '@kit.MediaLibraryKit'
+
+interface SnapshotFile {
+  fileName: string
+  filePath: string
+}
 
 @Entry
 @Component
@@ -593,12 +599,21 @@ struct PlayerPage {
                 this.chooseSpeed()
               })
 
-            SymbolGlyph($r('sys.symbol.camera'))
-              .fontSize(28)
-              .fontColor([$r('sys.color.font_on_primary')])
-              .enabled(this.prepared && !this.capturingSnapshot)
-              .onClick(() => {
-                this.captureCurrentFrame()
+            SaveButton({ icon: SaveIconStyle.FULL_FILLED, buttonType: ButtonType.Circle })
+              .width(40)
+              .height(40)
+              .onClick((_event, result, error) => {
+                if (result === SaveButtonOnClickResult.SUCCESS) {
+                  if (!this.prepared) {
+                    promptAction.showToast({ message: "视频准备好后再截屏" })
+                    return
+                  }
+                  this.captureCurrentFrame()
+                } else {
+                  promptAction.showToast({
+                    message: "保存授权失败：" + (error ? error.message : "请重新点击保存按钮")
+                  })
+                }
               })
 
             SymbolGlyph($r('sys.symbol.AI_sound'))
@@ -854,7 +869,7 @@ struct PlayerPage {
   }
 
   /**
-   * 隐藏控制层后截取当前窗口，尽量保存干净的视频画面而不是带按钮的界面。
+   * 点击 SaveButton 后先拿真实视频帧，再导入系统图库，方便在虚拟机相册里直接查看。
    */
   private async captureCurrentFrame(): Promise<void> {
     if (!this.prepared || this.capturingSnapshot) {
@@ -866,10 +881,11 @@ struct PlayerPage {
     this.ui = false
     try {
       await this.waitForSnapshotRender()
-      let pixelMap = await this.currenWindow.snapshot()
+      let pixelMap = await this.createSnapshotPixelMap()
       try {
-        let fileName = await this.saveSnapshotToFile(pixelMap)
-        promptAction.showToast({ message: "截屏已保存：" + fileName })
+        let snapshotFile = await this.saveSnapshotToFile(pixelMap)
+        await this.saveSnapshotToGallery(snapshotFile)
+        promptAction.showToast({ message: "已保存到图库：" + snapshotFile.fileName })
       } finally {
         await pixelMap.release()
       }
@@ -879,6 +895,17 @@ struct PlayerPage {
       this.ui = shouldRestoreUi
       this.capturingSnapshot = false
       this.addUITimeout()
+    }
+  }
+
+  /**
+   * 优先按播放进度解码视频帧；如果流媒体源不支持取帧，再退回窗口截图兜底。
+   */
+  private async createSnapshotPixelMap(): Promise<image.PixelMap> {
+    try {
+      return await this.videoController.captureFrame(this.progress > 0 ? this.progress : 0)
+    } catch (error) {
+      return await this.currenWindow.snapshot()
     }
   }
 
@@ -896,7 +923,7 @@ struct PlayerPage {
   /**
    * 将 PixelMap 压缩为 JPEG 并写入应用沙箱，便于通过 hdc 拉取或课堂演示检查。
    */
-  private async saveSnapshotToFile(pixelMap: image.PixelMap): Promise<string> {
+  private async saveSnapshotToFile(pixelMap: image.PixelMap): Promise<SnapshotFile> {
     let screenshotDir = getContext().filesDir + "/screenshots"
     fileIo.mkdirSync(screenshotDir, true)
     let fileName = "finvideo-shot-" + Date.now() + ".jpg"
@@ -908,13 +935,28 @@ struct PlayerPage {
       file = fileIo.openSync(filePath, fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC | fileIo.OpenMode.WRITE_ONLY)
       fileIo.writeSync(file.fd, buffer)
       fileIo.fsyncSync(file.fd)
-      return fileName
+      return {
+        fileName: fileName,
+        filePath: filePath
+      }
     } finally {
       if (file) {
         fileIo.closeSync(file)
       }
       await packer.release()
     }
+  }
+
+  /**
+   * SaveButton 点击后会给本次操作临时授权，这里把沙箱图片导入系统图库。
+   */
+  private async saveSnapshotToGallery(snapshotFile: SnapshotFile): Promise<void> {
+    let helper = photoAccessHelper.getPhotoAccessHelper(getContext())
+    let uri = fileUri.getUriFromPath(snapshotFile.filePath)
+    let request = photoAccessHelper.MediaAssetChangeRequest.createImageAssetRequest(getContext(), uri)
+    request.setTitle(snapshotFile.fileName.replace(".jpg", ""))
+    await helper.applyChanges(request)
+    fileIo.unlinkSync(snapshotFile.filePath)
   }
 
   private formatSnapshotError(error: Object): string {
