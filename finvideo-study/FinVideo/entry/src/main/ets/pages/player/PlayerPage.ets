@@ -10,6 +10,8 @@ import { AVVolumePanel } from '@kit.AudioKit'
 import { XController } from './XController'
 import { deviceInfo } from '@kit.BasicServicesKit'
 import { KeyCode } from '@kit.InputKit'
+import { image } from '@kit.ImageKit'
+import { fileIo } from '@kit.CoreFileKit'
 
 @Entry
 @Component
@@ -54,6 +56,8 @@ struct PlayerPage {
   private uiTimeoutId?: number
 
   @State locked: boolean = false
+
+  @State capturingSnapshot: boolean = false
 
   private saveSpeed?: media.PlaybackSpeed = undefined
 
@@ -589,6 +593,14 @@ struct PlayerPage {
                 this.chooseSpeed()
               })
 
+            SymbolGlyph($r('sys.symbol.camera'))
+              .fontSize(28)
+              .fontColor([$r('sys.color.font_on_primary')])
+              .enabled(this.prepared && !this.capturingSnapshot)
+              .onClick(() => {
+                this.captureCurrentFrame()
+              })
+
             SymbolGlyph($r('sys.symbol.AI_sound'))
               .fontSize(28)
               .fontColor([$r('sys.color.font_on_primary')])
@@ -839,6 +851,77 @@ struct PlayerPage {
 
   private pip() {
 
+  }
+
+  /**
+   * 隐藏控制层后截取当前窗口，尽量保存干净的视频画面而不是带按钮的界面。
+   */
+  private async captureCurrentFrame(): Promise<void> {
+    if (!this.prepared || this.capturingSnapshot) {
+      return
+    }
+    this.capturingSnapshot = true
+    let shouldRestoreUi = this.ui
+    this.clearUITimeout()
+    this.ui = false
+    try {
+      await this.waitForSnapshotRender()
+      let pixelMap = await this.currenWindow.snapshot()
+      try {
+        let fileName = await this.saveSnapshotToFile(pixelMap)
+        promptAction.showToast({ message: "截屏已保存：" + fileName })
+      } finally {
+        await pixelMap.release()
+      }
+    } catch (error) {
+      promptAction.showToast({ message: "截屏失败：" + this.formatSnapshotError(error) })
+    } finally {
+      this.ui = shouldRestoreUi
+      this.capturingSnapshot = false
+      this.addUITimeout()
+    }
+  }
+
+  /**
+   * 等待一次界面刷新，确保控制层隐藏状态已经真正渲染后再截图。
+   */
+  private waitForSnapshotRender(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve()
+      }, 120)
+    })
+  }
+
+  /**
+   * 将 PixelMap 压缩为 JPEG 并写入应用沙箱，便于通过 hdc 拉取或课堂演示检查。
+   */
+  private async saveSnapshotToFile(pixelMap: image.PixelMap): Promise<string> {
+    let screenshotDir = getContext().filesDir + "/screenshots"
+    fileIo.mkdirSync(screenshotDir, true)
+    let fileName = "finvideo-shot-" + Date.now() + ".jpg"
+    let filePath = screenshotDir + "/" + fileName
+    let packer = image.createImagePacker()
+    let file: fileIo.File | undefined = undefined
+    try {
+      let buffer = await packer.packToData(pixelMap, { format: "image/jpeg", quality: 95 })
+      file = fileIo.openSync(filePath, fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC | fileIo.OpenMode.WRITE_ONLY)
+      fileIo.writeSync(file.fd, buffer)
+      fileIo.fsyncSync(file.fd)
+      return fileName
+    } finally {
+      if (file) {
+        fileIo.closeSync(file)
+      }
+      await packer.release()
+    }
+  }
+
+  private formatSnapshotError(error: Object): string {
+    if (error instanceof Error) {
+      return error.message
+    }
+    return JSON.stringify(error)
   }
 
   private playOrPause() {
