@@ -2,6 +2,7 @@ import { window } from '@kit.ArkUI'
 import { AppPrefer } from '../../prefer/AppPrefer'
 import { CommonConstants, ToolBar } from '@ohpg/fin-framework'
 import { WebTool } from '@ohpg/fin-core'
+import { PlayerImpl } from '../../player/PlayerImpl'
 
 @Entry
 @Component
@@ -33,6 +34,13 @@ struct VideoSettingPage {
 
   aboutToAppear(): void {
     this.implIndex = this.appPrefer.getPlayerImpl()
+  }
+
+  private resetPlayerPreference(): void {
+    // AUTO 会按媒体能力自动选择 AVPlayer 或 WLMedia，作为重置目标最稳妥。
+    this.implIndex = PlayerImpl.AUTO
+    this.appPrefer.resetPlayerImpl()
+    this.getUIContext().getPromptAction().showToast({message: '已恢复默认播放器'})
   }
 
   build() {
@@ -73,6 +81,29 @@ struct VideoSettingPage {
           left: CommonConstants.SPACE_16,
           right: CommonConstants.SPACE_16
         })
+
+      Row() {
+        Button({ type: ButtonType.Capsule }) {
+          Row({ space: CommonConstants.SPACE_8 }) {
+            SymbolGlyph($r('sys.symbol.character_arrow_clockwise'))
+              .fontSize(18)
+              .fontColor([$r('sys.color.font_on_primary')])
+            Text('恢复默认播放器')
+              .fontSize(14)
+              .fontColor($r('sys.color.font_on_primary'))
+          }
+        }
+        .height(36)
+        .onClick(() => {
+          this.resetPlayerPreference()
+        })
+        Blank()
+      }
+      .width(CommonConstants.FULL_PERCENT)
+      .padding({
+        left: CommonConstants.SPACE_16,
+        right: CommonConstants.SPACE_16
+      })
 
       Blank()
 

@@ -53,6 +53,15 @@ export class AppPrefer {
     this.preference.flush()
   }
 
+  /**
+   * 将播放器实现恢复为 AUTO，这是应用原本的默认策略。
+   * 重置逻辑放在偏好层，页面不需要知道底层存储 key。
+   */
+  public resetPlayerImpl() {
+    this.preference.putSync(AppPrefer.KEY_PLAYER_IMPL, PlayerImpl.AUTO)
+    this.preference.flush()
+  }
+
   public getSortOrder(): FinSortOrder {
     if (this.preference.hasSync(AppPrefer.KEY_SORT_ORDER)) {
       return this.preference.getSync(AppPrefer.KEY_SORT_ORDER, FinSortOrder.Ascending) as FinSortOrder
