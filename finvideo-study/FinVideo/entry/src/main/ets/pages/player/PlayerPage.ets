@@ -11,12 +11,13 @@ import { XController } from './XController'
 import { deviceInfo } from '@kit.BasicServicesKit'
 import { KeyCode } from '@kit.InputKit'
 import { image } from '@kit.ImageKit'
-import { fileIo, fileUri } from '@kit.CoreFileKit'
+import { fileIo } from '@kit.CoreFileKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
 
-interface SnapshotFile {
+interface SnapshotImage {
   fileName: string
-  filePath: string
+  title: string
+  buffer: ArrayBuffer
 }
 
 @Entry
@@ -883,9 +884,9 @@ struct PlayerPage {
       await this.waitForSnapshotRender()
       let pixelMap = await this.createSnapshotPixelMap()
       try {
-        let snapshotFile = await this.saveSnapshotToFile(pixelMap)
-        await this.saveSnapshotToGallery(snapshotFile)
-        promptAction.showToast({ message: "已保存到图库：" + snapshotFile.fileName })
+        let snapshotImage = await this.packSnapshotImage(pixelMap)
+        await this.saveSnapshotToGallery(snapshotImage)
+        promptAction.showToast({ message: "已保存到图库：" + snapshotImage.fileName })
       } finally {
         await pixelMap.release()
       }
@@ -921,42 +922,41 @@ struct PlayerPage {
   }
 
   /**
-   * 将 PixelMap 压缩为 JPEG 并写入应用沙箱，便于通过 hdc 拉取或课堂演示检查。
+   * 将 PixelMap 压缩为 JPEG 内存数据，后续直接写入图库授权 URI。
    */
-  private async saveSnapshotToFile(pixelMap: image.PixelMap): Promise<SnapshotFile> {
-    let screenshotDir = getContext().filesDir + "/screenshots"
-    fileIo.mkdirSync(screenshotDir, true)
-    let fileName = "finvideo-shot-" + Date.now() + ".jpg"
-    let filePath = screenshotDir + "/" + fileName
+  private async packSnapshotImage(pixelMap: image.PixelMap): Promise<SnapshotImage> {
+    let title = "finvideo-shot-" + Date.now()
     let packer = image.createImagePacker()
-    let file: fileIo.File | undefined = undefined
     try {
       let buffer = await packer.packToData(pixelMap, { format: "image/jpeg", quality: 95 })
-      file = fileIo.openSync(filePath, fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC | fileIo.OpenMode.WRITE_ONLY)
-      fileIo.writeSync(file.fd, buffer)
-      fileIo.fsyncSync(file.fd)
       return {
-        fileName: fileName,
-        filePath: filePath
+        fileName: title + ".jpg",
+        title: title,
+        buffer: buffer
       }
     } finally {
-      if (file) {
-        fileIo.closeSync(file)
-      }
       await packer.release()
     }
   }
 
   /**
-   * SaveButton 点击后会给本次操作临时授权，这里把沙箱图片导入系统图库。
+   * SaveButton 点击后会给本次操作短期媒体写入授权，这里创建图库 URI 并写入 JPEG 数据。
    */
-  private async saveSnapshotToGallery(snapshotFile: SnapshotFile): Promise<void> {
+  private async saveSnapshotToGallery(snapshotImage: SnapshotImage): Promise<void> {
     let helper = photoAccessHelper.getPhotoAccessHelper(getContext())
-    let uri = fileUri.getUriFromPath(snapshotFile.filePath)
-    let request = photoAccessHelper.MediaAssetChangeRequest.createImageAssetRequest(getContext(), uri)
-    request.setTitle(snapshotFile.fileName.replace(".jpg", ""))
-    await helper.applyChanges(request)
-    fileIo.unlinkSync(snapshotFile.filePath)
+    let uri = await helper.createAssetWithShortTermPermission({
+      title: snapshotImage.title,
+      fileNameExtension: "jpg",
+      photoType: photoAccessHelper.PhotoType.IMAGE,
+      subtype: photoAccessHelper.PhotoSubtype.DEFAULT
+    })
+    let file = fileIo.openSync(uri, fileIo.OpenMode.READ_WRITE)
+    try {
+      fileIo.writeSync(file.fd, snapshotImage.buffer)
+      fileIo.fsyncSync(file.fd)
+    } finally {
+      fileIo.closeSync(file)
+    }
   }
 
   private formatSnapshotError(error: Object): string {
