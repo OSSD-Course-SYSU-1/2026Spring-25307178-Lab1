@@ -21,6 +21,30 @@ struct SearchPage {
 
   private viewModel = new SearchViewModel(getContext(), this.args.word)
 
+  @State keyword: string = ''
+
+  @State pageTitle: string = ''
+
+  aboutToAppear(): void {
+    this.keyword = this.args.word
+    this.pageTitle = this.args.word
+  }
+
+  private async submitSearch(word: string): Promise<void> {
+    let nextKeyword = word.trim()
+    this.keyword = nextKeyword
+    this.pageTitle = nextKeyword.length > 0 ? nextKeyword : '搜索'
+    this.getUIContext().getFocusController().clearFocus()
+    await this.viewModel.search(nextKeyword)
+  }
+
+  private clearKeyword(): void {
+    this.keyword = ''
+    this.pageTitle = '搜索'
+    this.getUIContext().getFocusController().clearFocus()
+    this.viewModel.clearResult()
+  }
+
   @Builder
   private mainGroup(sectionInfo: SectionInfo, index: number) {
     if (sectionInfo.type === FinItemType.Episode) {
@@ -33,8 +57,38 @@ struct SearchPage {
   build() {
     Column() {
       ToolBar({
-        title: this.args.word
+        title: this.pageTitle
       })
+
+      // 搜索结果页增加就地修改和清空入口，避免用户为了换关键词反复返回主页。
+      Row({ space: CommonConstants.SPACE_8 }) {
+        Search({ value: this.keyword, placeholder: $r('app.string.search_title') })
+          .fontColor($r('sys.color.ohos_id_color_text_primary'))
+          .height(40)
+          .layoutWeight(1)
+          .onChange((value: string) => {
+            this.keyword = value
+          })
+          .onSubmit((word: string) => {
+            this.submitSearch(word)
+          })
+
+        if (this.keyword.length > 0) {
+          Button('清空')
+            .height(40)
+            .fontSize(14)
+            .onClick(() => {
+              this.clearKeyword()
+            })
+        }
+      }
+      .width(CommonConstants.FULL_PERCENT)
+      .padding({
+        left: CommonConstants.SPACE_16,
+        right: CommonConstants.SPACE_16,
+        bottom: CommonConstants.SPACE_8
+      })
+
       ListRefreshView({
         source: this.viewModel,
         itemLayout: this.mainGroup,
