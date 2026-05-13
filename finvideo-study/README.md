@@ -33,3 +33,10 @@ hdc shell aa start -b org.ohpg.fin.video -a EntryAbility
 On 2026-05-12, the project was built locally and installed on the HarmonyOS
 emulator target `127.0.0.1:5555`. The bundle `org.ohpg.fin.video` launched
 successfully.
+
+## Course Deliverables
+
+- Code analysis report: `REPORT.md`
+- Added feature description: `FEATURES.md`
+- Baseline emulator recording: `demo/改前版本.mp4`
+- Enhanced emulator recording: `demo/改后版本.mp4`
