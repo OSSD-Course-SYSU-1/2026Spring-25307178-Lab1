@@ -11,8 +11,11 @@ import { XController } from './XController'
 import { deviceInfo } from '@kit.BasicServicesKit'
 import { KeyCode } from '@kit.InputKit'
 import { image } from '@kit.ImageKit'
-import { fileIo } from '@kit.CoreFileKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
+import { hilog } from '@kit.PerformanceAnalysisKit'
+
+const SNAPSHOT_LOG_DOMAIN = 0x0000
+const SNAPSHOT_LOG_TAG = 'FinSnapshot'
 
 interface SnapshotImage {
   fileName: string
@@ -891,6 +894,7 @@ struct PlayerPage {
         await pixelMap.release()
       }
     } catch (error) {
+      hilog.error(SNAPSHOT_LOG_DOMAIN, SNAPSHOT_LOG_TAG, 'Snapshot failed: %{public}s', this.formatSnapshotError(error))
       promptAction.showToast({ message: "截屏失败：" + this.formatSnapshotError(error) })
     } finally {
       this.ui = shouldRestoreUi
@@ -940,23 +944,20 @@ struct PlayerPage {
   }
 
   /**
-   * SaveButton 点击后会给本次操作短期媒体写入授权，这里创建图库 URI 并写入 JPEG 数据。
+   * SaveButton 已经给本次点击授予临时写入权限，这里直接提交媒体变更，避免额外的系统保存弹窗。
    */
   private async saveSnapshotToGallery(snapshotImage: SnapshotImage): Promise<void> {
+    hilog.info(SNAPSHOT_LOG_DOMAIN, SNAPSHOT_LOG_TAG, 'Saving snapshot: %{public}s', snapshotImage.fileName)
     let helper = photoAccessHelper.getPhotoAccessHelper(getContext())
-    let uri = await helper.createAssetWithShortTermPermission({
-      title: snapshotImage.title,
-      fileNameExtension: "jpg",
-      photoType: photoAccessHelper.PhotoType.IMAGE,
-      subtype: photoAccessHelper.PhotoSubtype.DEFAULT
-    })
-    let file = fileIo.openSync(uri, fileIo.OpenMode.READ_WRITE)
-    try {
-      fileIo.writeSync(file.fd, snapshotImage.buffer)
-      fileIo.fsyncSync(file.fd)
-    } finally {
-      fileIo.closeSync(file)
-    }
+    let request = photoAccessHelper.MediaAssetChangeRequest.createAssetRequest(
+      getContext(),
+      photoAccessHelper.PhotoType.IMAGE,
+      "jpg",
+      { title: snapshotImage.title }
+    )
+    request.addResource(photoAccessHelper.ResourceType.IMAGE_RESOURCE, snapshotImage.buffer)
+    await helper.applyChanges(request)
+    hilog.info(SNAPSHOT_LOG_DOMAIN, SNAPSHOT_LOG_TAG, 'Snapshot saved: %{public}s', snapshotImage.fileName)
   }
 
   private formatSnapshotError(error: Object): string {
