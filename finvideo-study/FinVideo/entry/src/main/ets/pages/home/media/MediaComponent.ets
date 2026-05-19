@@ -4,7 +4,7 @@ import { CommonConstants } from "../../common/CommonConstants";
 import { GridRefreshView } from "@ohpg/fin-framework";
 import { HomeToolBar } from "../../../widget/bar/HomeToolBar";
 import { MediaRouter } from "../../common/MediaRouter";
-import { FinItem } from "@ohpg/fin-core";
+import { BreakpointSystem, FinItem } from "@ohpg/fin-core";
 
 /**
  * @Author peerless2012
@@ -17,6 +17,33 @@ import { FinItem } from "@ohpg/fin-core";
 export struct MediaComponent {
 
   private viewModel = new MediaViewModel(getContext())
+
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
+  // Grid 的 auto-fit 列宽随断点增长，使媒体库在大小屏上都保持合适密度。
+  private gridItemWidth(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return 140
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 168
+    }
+    return 196
+  }
+
+  private gridPadding(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return CommonConstants.SPACE_16
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 24
+    }
+    return 32
+  }
+
+  private columnsTemplate(): string {
+    return `repeat(auto-fit, ${this.gridItemWidth()})`
+  }
 
   @Builder
   mediaLibraryItem(item: Object, index: number) {
@@ -36,12 +63,12 @@ export struct MediaComponent {
         itemLayout: this.mediaLibraryItem,
         gridAttribute: (attr: GridAttr) => {
           attr.padding = {
-            left: CommonConstants.SPACE_16,
-            right: CommonConstants.SPACE_16
+            left: this.gridPadding(),
+            right: this.gridPadding()
           }
           attr.rowsGap = CommonConstants.SPACE_12
           attr.columnsGap = CommonConstants.SPACE_12
-          attr.columnsTemplate = 'repeat(auto-fit, 140)'
+          attr.columnsTemplate = this.columnsTemplate()
           attr.width = CommonConstants.FULL_PERCENT
           attr.height = CommonConstants.FULL_PERCENT
         },

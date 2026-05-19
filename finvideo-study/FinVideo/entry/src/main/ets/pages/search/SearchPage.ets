@@ -9,7 +9,7 @@ import { SectionToolBar } from '../../widget/bar/SectionToolBar'
 import LazyDataSource from '../common/LazyDataSource'
 import { MediaItem } from '../../widget/media/MediaItem'
 import { EpisodeItem } from '../../widget/media/EpisodeItem'
-import { FinItem, FinItemType } from '@ohpg/fin-core'
+import { BreakpointSystem, FinItem, FinItemType } from '@ohpg/fin-core'
 
 @Entry
 @Component
@@ -116,10 +116,33 @@ struct SectionPo {
 
   @Require @State item?: SectionInfo = undefined
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   private itemData = new LazyDataSource<FinItem>()
 
   aboutToAppear(): void {
     this.itemData.dataArray = this.item?.items!
+  }
+
+  // 搜索结果横向海报列表随断点增宽，方便在大屏上展示更多封面细节。
+  private itemWidth(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return 140
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 168
+    }
+    return 196
+  }
+
+  private contentOffset(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return CommonConstants.SPACE_16
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 24
+    }
+    return 32
   }
 
   build() {
@@ -128,12 +151,12 @@ struct SectionPo {
       List({space: CommonConstants.SPACE_12}) {
         LazyForEach(this.itemData, (item: FinItem) => {
             ListItem() {
-              MediaItem({item: item, itemWidth: 140})
+              MediaItem({item: item, itemWidth: this.itemWidth()})
             }
         })
       }
-      .contentStartOffset(CommonConstants.SPACE_16)
-      .contentEndOffset(CommonConstants.SPACE_16)
+      .contentStartOffset(this.contentOffset())
+      .contentEndOffset(this.contentOffset())
       .width(CommonConstants.FULL_PERCENT)
       .scrollBar(BarState.Off)
       .listDirection(Axis.Horizontal)
@@ -148,10 +171,33 @@ struct SectionLand {
 
   @Require @State item?: SectionInfo = undefined
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   private itemData = new LazyDataSource<FinItem>()
 
   aboutToAppear(): void {
     this.itemData.dataArray = this.item?.items!
+  }
+
+  // 剧集横卡比海报更宽，宽屏下同步放大以保留标题可读性。
+  private itemWidth(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return 200
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 260
+    }
+    return 320
+  }
+
+  private contentOffset(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return CommonConstants.SPACE_16
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 24
+    }
+    return 32
   }
 
   build() {
@@ -160,12 +206,12 @@ struct SectionLand {
       List({space: CommonConstants.SPACE_12}) {
         LazyForEach(this.itemData, (item: FinItem) => {
           ListItem() {
-            EpisodeItem({item: item})
+            EpisodeItem({item: item, itemWidth: this.itemWidth()})
           }
         })
       }
-      .contentStartOffset(CommonConstants.SPACE_16)
-      .contentEndOffset(CommonConstants.SPACE_16)
+      .contentStartOffset(this.contentOffset())
+      .contentEndOffset(this.contentOffset())
       .width(CommonConstants.FULL_PERCENT)
       .scrollBar(BarState.Off)
       .listDirection(Axis.Horizontal)

@@ -6,7 +6,7 @@ import { CategoryToolBar } from '../../../widget/bar/CategoryToolBar';
 import { MediaItem } from '../../../widget/media/MediaItem';
 import { EpisodeItem } from '../../../widget/media/EpisodeItem';
 import { GroupInfo } from '../../../entity/GroupInfo';
-import { FinItem } from '@ohpg/fin-core';
+import { BreakpointSystem, FinItem } from '@ohpg/fin-core';
 
 /**
  * @Author peerless2012
@@ -62,8 +62,41 @@ struct MainNormalGroup {
 
   @Require @State item?: GroupInfo = undefined
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as GroupInfo
+  }
+
+  // 小屏保持原始手机布局，中/大屏放大卡片，便于平板和宽屏窗口演示。
+  private posterWidth(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return 140
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 168
+    }
+    return 196
+  }
+
+  private episodeWidth(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return 200
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 260
+    }
+    return 320
+  }
+
+  private contentOffset(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return CommonConstants.SPACE_16
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 24
+    }
+    return 32
   }
 
   build() {
@@ -75,15 +108,15 @@ struct MainNormalGroup {
         ForEach(this.item?.items, (item: FinItem) => {
           ListItem() {
             if (this.item?.type === "Normal" || this.item?.type === "Recent") {
-              MediaItem({item: item, itemWidth: 140})
+              MediaItem({item: item, itemWidth: this.posterWidth()})
             } else {
-              EpisodeItem({item: item, progress: this.item?.type === 'Continue'})
+              EpisodeItem({item: item, progress: this.item?.type === 'Continue', itemWidth: this.episodeWidth()})
             }
           }
         })
       }
-      .contentStartOffset(CommonConstants.SPACE_16)
-      .contentEndOffset(CommonConstants.SPACE_16)
+      .contentStartOffset(this.contentOffset())
+      .contentEndOffset(this.contentOffset())
       .width(CommonConstants.FULL_PERCENT)
       .scrollBar(BarState.Off)
       .listDirection(Axis.Horizontal)

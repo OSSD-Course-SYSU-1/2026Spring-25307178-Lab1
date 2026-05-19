@@ -6,7 +6,7 @@ import { CategoryToolBar } from "../../../widget/bar/CategoryToolBar"
 import { EpisodeItem } from "../../../widget/media/EpisodeItem"
 import { MediaItem } from "../../../widget/media/MediaItem"
 import { GroupInfo } from "../../../entity/GroupInfo"
-import { FinItem, FinItemType } from "@ohpg/fin-core"
+import { BreakpointSystem, FinItem, FinItemType } from "@ohpg/fin-core"
 
 /**
  * @Author peerless2012
@@ -61,8 +61,41 @@ struct FavouriteGroup {
 
   @Require @State item?: GroupInfo = undefined
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as GroupInfo
+  }
+
+  // 收藏页和首页共用一套断点尺寸，切到大屏后列表不会显得过密。
+  private posterWidth(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return 140
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 168
+    }
+    return 196
+  }
+
+  private episodeWidth(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return 200
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 260
+    }
+    return 320
+  }
+
+  private contentOffset(): number {
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
+      return CommonConstants.SPACE_16
+    }
+    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
+      return 24
+    }
+    return 32
   }
 
   build() {
@@ -76,15 +109,15 @@ struct FavouriteGroup {
         ForEach(this.item?.items, (item: FinItem) => {
           ListItem() {
             if (item.type === FinItemType.Episode) {
-              EpisodeItem({item: item})
+              EpisodeItem({item: item, itemWidth: this.episodeWidth()})
             } else {
-              MediaItem({item: item, itemWidth: 140})
+              MediaItem({item: item, itemWidth: this.posterWidth()})
             }
           }
         })
       }
-      .contentStartOffset(CommonConstants.SPACE_16)
-      .contentEndOffset(CommonConstants.SPACE_16)
+      .contentStartOffset(this.contentOffset())
+      .contentEndOffset(this.contentOffset())
       .width('100%')
       .scrollBar(BarState.Off)
       .listDirection(Axis.Horizontal)

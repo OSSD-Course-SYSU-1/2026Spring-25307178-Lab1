@@ -10,6 +10,8 @@ export struct EpisodeItem {
 
   @State progress: boolean = false
 
+  @State itemWidth: string | number = 200
+
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as FinItem
   }
@@ -50,7 +52,7 @@ export struct EpisodeItem {
           .width(CommonConstants.FULL_PERCENT)
       }
     }
-    .width(200)
+    .width(this.itemWidth)
     .onClick(() => {
       let sheet = new ShowEpisodeSheet(this.getUIContext(), this.item!)
       sheet.show()
