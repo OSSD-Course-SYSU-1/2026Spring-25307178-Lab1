@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>无线文件传输</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="top-bar">
+        <div>
+          <h1>无线文件传输</h1>
+          <p>同一 Wi-Fi 下访问局域网地址，直接上传和下载文件。</p>
+        </div>
+        <button id="refreshButton" type="button">刷新列表</button>
+      </header>
+
+      <section class="panel connection-panel" aria-labelledby="connectTitle">
+        <div>
+          <h2 id="connectTitle">连接信息</h2>
+          <p>接收设备打开下面任意地址，输入页面显示的 PIN 后即可传文件。</p>
+        </div>
+        <div class="pin-row">
+          <span>PIN</span>
+          <strong id="pinValue">------</strong>
+        </div>
+        <div id="addressList" class="address-list"></div>
+      </section>
+
+      <section class="workspace-grid">
+        <div class="panel upload-panel">
+          <h2>发送文件</h2>
+          <label id="dropZone" class="drop-zone" for="fileInput">
+            <span>选择文件或拖到这里</span>
+            <small>支持多文件，传输过程只在当前局域网内完成。</small>
+          </label>
+          <input id="fileInput" type="file" multiple>
+          <div id="uploadQueue" class="upload-queue"></div>
+        </div>
+
+        <div class="panel file-panel">
+          <div class="file-panel-head">
+            <h2>可下载文件</h2>
+            <span id="fileCount">0 个文件</span>
+          </div>
+          <div id="fileList" class="file-list"></div>
+        </div>
+      </section>
+
+      <p id="statusLine" class="status-line" role="status">正在初始化...</p>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>

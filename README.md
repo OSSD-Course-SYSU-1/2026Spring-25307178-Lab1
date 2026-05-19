@@ -45,3 +45,10 @@ An additional OpenHarmony Stage model sample and report are included under
 `advanced-stage-app/`. It analyzes the official `AbilityStartMode` project,
 covering `AbilityStage`, `WindowStage`, multiple `UIAbility` launch modes, and
 verification on a DevEco Studio HarmonyOS emulator.
+
+## Wireless File Transfer
+
+An independent cross-device wireless file transfer demo is included under
+`wireless-file-transfer/`. It starts a local Node.js HTTP service and lets
+devices on the same Wi-Fi upload, list, download, and delete files through a
+browser page.
