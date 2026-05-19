@@ -23,6 +23,8 @@
 3. 播放器设置页支持一键恢复默认播放器。
 4. 首页展示最近播放记录。
 5. 播放器内支持视频画面截屏并保存到系统图库。
+6. 主页、媒体库、收藏和搜索结果支持大小屏响应式适配。
+7. 播放器支持复制跨设备续播码，偏好页支持导入续播码继续播放。
 
 ## 4. 功能一：课程移植信息展示
 
@@ -106,7 +108,46 @@
 - `3150fa2 Fix FinVideo snapshot save with short-term URI`
 - `e569c3c Fix FinVideo snapshot gallery save`
 
-## 9. 运行演示说明
+## 9. 功能六：大小屏适配
+
+### 功能说明
+
+新增大小屏适配能力。主页、媒体库、收藏、搜索结果和媒体列表页会读取应用已有的 `BreakpointSystem` 断点状态，在手机小屏保持原始布局，在中屏和大屏下自动放大海报卡、剧集横卡，并增加页面左右边距。这样同一个 FinVideo 工程在手机、平板、2in1 或模拟器宽屏窗口中都能保持更合适的内容密度。
+
+### 涉及文件
+
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/home/main/MainComponent.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/home/media/MediaComponent.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/home/favourite/FavouriteComponent.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/media/MediaListPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/favourite/FavouriteListPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/search/SearchPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/widget/media/MediaItem.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/widget/media/EpisodeItem.ets`
+
+### 相关提交
+
+- `7bcefe3 Add responsive large-screen layout`
+
+## 10. 功能七：跨设备续播
+
+### 功能说明
+
+新增跨设备续播演示能力。播放器顶部增加“续播”按钮，点击后会把当前视频的媒体 ID、名称、类型、播放进度和时长编码成 FinVideo 续播码并复制到剪贴板。另一台设备进入“设置/偏好”页中的“跨设备续播”入口后，可以通过安全粘贴按钮读取续播码，预览视频名称和进度，并直接跳转播放器从对应时间点继续播放。
+
+该功能为了课堂演示稳定，采用“续播码 + 剪贴板/手动粘贴”的方式传递播放状态；真正拉流仍然使用目标设备本机配置的 Jellyfin/Emby 服务器地址和账号。
+
+### 涉及文件
+
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/player/PlayerPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/player/PlayerArgs.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/transfer/TransferPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/transfer/TransferSessionCodec.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/entity/FinTransferSession.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/home/prefer/PreferComponent.ets`
+- `finvideo-study/FinVideo/entry/src/main/resources/base/profile/main_pages.json`
+
+## 11. 运行演示说明
 
 ### 改前版本
 
@@ -116,7 +157,7 @@
 
 `finvideo-study/demo/改后版本.mp4` 展示新增功能后的运行效果，重点体现视频播放、最近播放入口和视频截屏保存等可演示功能。
 
-## 10. 构建与验证
+## 12. 构建与验证
 
 本地验证环境为 DevEco Studio + HarmonyOS 模拟器 `127.0.0.1:5555`。主要验证命令如下：
 

@@ -86,6 +86,10 @@ export struct PreferComponent {
         router.push({url: "pages/setting/VideoSettingPage"})
       })
 
+      this.preferItemBuilder($r('sys.symbol.play_video'), '跨设备续播', () => {
+        router.push({url: "pages/transfer/TransferPage"})
+      })
+
       this.preferItemBuilder($r('sys.symbol.message'), $r('app.string.prefer_about'), () => {
         router.push({url: "pages/about/AboutPage"})
       })

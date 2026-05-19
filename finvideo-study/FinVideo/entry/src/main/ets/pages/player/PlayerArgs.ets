@@ -12,4 +12,6 @@ export interface PlayerArgs extends DetailArgs {
 
   type: FinItemType
 
+  startPosition?: number
+
 }

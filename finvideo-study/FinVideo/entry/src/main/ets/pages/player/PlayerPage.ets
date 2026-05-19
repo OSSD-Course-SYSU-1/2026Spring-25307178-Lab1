@@ -8,11 +8,13 @@ import { TimeTool } from '@ohpg/fin-core'
 import { media } from '@kit.MediaKit'
 import { AVVolumePanel } from '@kit.AudioKit'
 import { XController } from './XController'
-import { deviceInfo } from '@kit.BasicServicesKit'
+import { deviceInfo, pasteboard } from '@kit.BasicServicesKit'
 import { KeyCode } from '@kit.InputKit'
 import { image } from '@kit.ImageKit'
 import { photoAccessHelper } from '@kit.MediaLibraryKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
+import { FinTransferSession } from '../../entity/FinTransferSession'
+import { TransferSessionCodec } from '../transfer/TransferSessionCodec'
 
 const SNAPSHOT_LOG_DOMAIN = 0x0000
 const SNAPSHOT_LOG_TAG = 'FinSnapshot'
@@ -54,6 +56,8 @@ struct PlayerPage {
   @State state: media.AVPlayerState = 'idle'
 
   private shouldResumePlay = false
+
+  private transferStartApplied = false
 
   @State prepared: boolean = false
 
@@ -138,6 +142,7 @@ struct PlayerPage {
         this.loading = false
         this.prepared = true
         this.duration = this.videoController.player!.getDuration()
+        this.applyTransferStartPosition()
         this.videoController.player?.start()
       } else if (state === "playing") {
       } else if (state === 'paused') {
@@ -601,6 +606,14 @@ struct PlayerPage {
               .enabled(this.prepared)
               .onClick(() => {
                 this.chooseSpeed()
+              })
+
+            Button('续播')
+              .height(36)
+              .fontSize(14)
+              .enabled(this.prepared)
+              .onClick(() => {
+                this.copyTransferSession()
               })
 
             SaveButton({ icon: SaveIconStyle.FULL_FILLED, buttonType: ButtonType.Circle })
@@ -1068,6 +1081,44 @@ struct PlayerPage {
       position = 0
     }
     this.videoController.player?.seek(position)
+  }
+
+  private applyTransferStartPosition(): void {
+    if (this.transferStartApplied || !this.args.startPosition || this.args.startPosition <= 0 || this.duration <= 0) {
+      return
+    }
+    this.transferStartApplied = true
+    let startPosition = this.args.startPosition
+    if (startPosition >= this.duration) {
+      startPosition = this.duration - 1000
+    }
+    this.seekTo(startPosition)
+    promptAction.showToast({ message: '已从跨设备进度继续播放' })
+  }
+
+  private async copyTransferSession(): Promise<void> {
+    if (!this.itemDto || !this.videoController.player) {
+      promptAction.showToast({ message: '视频准备好后再复制续播码' })
+      return
+    }
+    let currentPosition = this.videoController.player.getPosition()
+    let session: FinTransferSession = {
+      version: 1,
+      id: this.itemDto.id,
+      name: this.itemDto.name,
+      type: this.itemDto.type!,
+      position: currentPosition > 0 ? currentPosition : 0,
+      duration: this.duration > 0 ? this.duration : 0,
+      createdAt: Date.now()
+    }
+    try {
+      // 续播码只携带媒体 id 和进度；另一台设备仍使用自己的服务器配置拉流。
+      let pasteboardData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, TransferSessionCodec.encode(session))
+      await pasteboard.getSystemPasteboard().setData(pasteboardData)
+      promptAction.showToast({ message: '续播码已复制，可到另一台设备导入' })
+    } catch (error) {
+      promptAction.showToast({ message: '复制续播码失败，请重试' })
+    }
   }
 
   private chooseSpeed() {
