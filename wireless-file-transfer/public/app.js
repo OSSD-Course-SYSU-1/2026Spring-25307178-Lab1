@@ -54,31 +54,40 @@ async function loadConfig() {
   const config = await response.json()
   state.pin = config.pin
   elements.pinValue.textContent = config.pin
-  renderAddresses(config.urls ?? [])
+  renderAddresses(config.networkUrls ?? config.urls ?? [])
   setStatus('服务已启动，可以开始传输文件。')
 }
 
-function renderAddresses(urls) {
-  const allUrls = [window.location.origin, ...urls].filter((value, index, array) => array.indexOf(value) === index)
+function renderAddresses(items) {
+  const normalizedItems = [
+    { url: window.location.origin, interfaceName: '当前访问', recommended: false, virtual: false },
+    ...items.map((item) => typeof item === 'string' ? { url: item } : item)
+  ].filter((value, index, array) => array.findIndex((item) => item.url === value.url) === index)
   elements.addressList.innerHTML = ''
 
-  for (const url of allUrls) {
+  for (const itemInfo of normalizedItems) {
     const item = document.createElement('div')
     item.className = 'address-item'
 
     const link = document.createElement('a')
-    link.href = url
-    link.textContent = url
+    link.href = itemInfo.url
+    link.textContent = itemInfo.url
     link.target = '_blank'
     link.rel = 'noreferrer'
+
+    const badge = document.createElement('span')
+    badge.className = itemInfo.recommended && !itemInfo.virtual ? 'address-badge is-recommended' : 'address-badge'
+    badge.textContent = itemInfo.recommended && !itemInfo.virtual
+      ? '推荐真机'
+      : (itemInfo.virtual ? '虚拟网卡' : (itemInfo.interfaceName ?? '地址'))
 
     const button = document.createElement('button')
     button.className = 'secondary'
     button.type = 'button'
     button.textContent = '复制'
-    button.addEventListener('click', () => copyText(url))
+    button.addEventListener('click', () => copyText(itemInfo.url))
 
-    item.append(link, button)
+    item.append(link, badge, button)
     elements.addressList.append(item)
   }
 }

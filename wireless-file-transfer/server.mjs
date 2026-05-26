@@ -35,21 +35,38 @@ const server = createServer(async (request, response) => {
 })
 
 server.listen(port, host, () => {
-  const urls = getLocalUrls(port)
+  const networkUrls = getNetworkUrls(port)
   console.log(`Wireless File Transfer is running.`)
   console.log(`PIN: ${transferPin}`)
   console.log(`Local: http://127.0.0.1:${port}`)
-  urls.forEach((url) => console.log(`LAN:   ${url}`))
+  networkUrls.forEach((item) => {
+    const suffix = item.recommended ? ' recommended' : (item.virtual ? ' virtual' : '')
+    console.log(`LAN:   ${item.url} [${item.interfaceName}]${suffix ? ` (${suffix.trim()})` : ''}`)
+  })
   console.log(`Upload directory: ${uploadDir}`)
 })
 
 async function routeRequest(request, response) {
   const requestUrl = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`)
 
+  if (request.method === 'GET' && requestUrl.pathname === '/api/health') {
+    const networkUrls = getNetworkUrls(port)
+    return sendJson(response, 200, {
+      ok: true,
+      service: 'wireless-file-transfer',
+      time: new Date().toISOString(),
+      recommendedUrl: networkUrls[0]?.url ?? `http://127.0.0.1:${port}`,
+      networkUrls
+    })
+  }
+
   if (request.method === 'GET' && requestUrl.pathname === '/api/config') {
+    const networkUrls = getNetworkUrls(port)
     return sendJson(response, 200, {
       pin: transferPin,
-      urls: getLocalUrls(port),
+      urls: networkUrls.map((item) => item.url),
+      recommendedUrl: networkUrls[0]?.url ?? `http://127.0.0.1:${port}`,
+      networkUrls,
       maxUploadBytes: MAX_UPLOAD_BYTES
     })
   }
@@ -220,17 +237,45 @@ function sanitizeFileName(fileName) {
   return baseName.length > 0 ? baseName.slice(0, 180) : `file-${Date.now()}`
 }
 
-function getLocalUrls(nextPort) {
-  const urls = []
+function getNetworkUrls(nextPort) {
+  const candidates = []
   const interfaces = networkInterfaces()
-  for (const values of Object.values(interfaces)) {
+  for (const [interfaceName, values] of Object.entries(interfaces)) {
     for (const address of values ?? []) {
       if (address.family === 'IPv4' && !address.internal) {
-        urls.push(`http://${address.address}:${nextPort}`)
+        if (address.address.startsWith('169.254.')) {
+          continue
+        }
+        candidates.push({
+          url: `http://${address.address}:${nextPort}`,
+          address: address.address,
+          interfaceName,
+          virtual: isVirtualInterface(interfaceName),
+          recommended: false
+        })
       }
     }
   }
-  return urls
+  candidates.sort((left, right) => candidateScore(right) - candidateScore(left)
+    || left.address.localeCompare(right.address))
+  const recommended = candidates.find((candidate) => !candidate.virtual) ?? candidates[0]
+  if (recommended) {
+    recommended.recommended = true
+  }
+  return candidates
+}
+
+function isVirtualInterface(interfaceName) {
+  return /vEthernet|virtual|vmware|virtualbox|docker|wsl|hyper-v|loopback|bluetooth|npcap|wintun|singbox|tun|tap/i.test(interfaceName)
+}
+
+function candidateScore(candidate) {
+  let score = candidate.virtual ? -100 : 100
+  if (/wi-?fi|wlan|wireless|以太网|ethernet/i.test(candidate.interfaceName)) score += 20
+  if (candidate.address.startsWith('192.168.')) score += 15
+  if (candidate.address.startsWith('10.')) score += 10
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(candidate.address)) score += 5
+  return score
 }
 
 function sendJson(response, statusCode, payload) {

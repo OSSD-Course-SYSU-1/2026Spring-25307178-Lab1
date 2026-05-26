@@ -152,6 +152,23 @@ small,
   background: #fbfcfa;
 }
 
+.address-badge {
+  min-width: 76px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.address-badge.is-recommended {
+  border-color: #9bc8b6;
+  color: var(--accent-strong);
+  background: #edf8f3;
+}
+
 .workspace-grid {
   display: grid;
   grid-template-columns: minmax(280px, 420px) 1fr;
