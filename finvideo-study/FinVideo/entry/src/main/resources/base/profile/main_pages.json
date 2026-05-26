@@ -12,6 +12,10 @@
     "pages/transfer/TransferPage",
     "pages/setting/VideoSettingPage",
     "pages/interface/InterfacePage",
-    "pages/about/AboutPage"
+    "pages/about/AboutPage",
+    "pages/legal/PrivacyPolicyPage",
+    "pages/legal/UserAgreementPage",
+    "pages/legal/OpenSourceNoticePage",
+    "pages/legal/PermissionNoticePage"
   ]
 }

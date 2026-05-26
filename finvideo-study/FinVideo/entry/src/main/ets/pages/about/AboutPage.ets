@@ -1,7 +1,5 @@
 import { window } from '@kit.ArkUI'
-import { WebTool } from '@ohpg/fin-core'
 import { CommonConstants, ToolBar } from '@ohpg/fin-framework'
-import { pasteboard } from '@kit.BasicServicesKit'
 
 @Entry
 @Component
@@ -42,19 +40,22 @@ struct AboutPage {
           right: CommonConstants.SPACE_16
         })
 
-      // 课程移植信息用于在应用内直接确认本次作业所选版本、来源和验证结果，
-      // 便于老师或同学复现时快速对照仓库报告与本地运行状态。
+      // 上架版本需要向用户说明应用身份、基础项目和开源许可证，
+      // 避免继续暴露上游官方联系方式或课程调试信息。
       Column({ space: CommonConstants.SPACE_8 }) {
-        Text('课程移植信息')
+        Text('应用信息')
           .fontSize(16)
           .fontColor($r('sys.color.ohos_id_color_text_primary'))
           .fontWeight(FontWeight.Medium)
           .width(CommonConstants.FULL_PERCENT)
 
-        this.studyInfoRow('选用版本', 'FinVideo v0.3.3')
-        this.studyInfoRow('上游提交', 'd76959b')
+        this.studyInfoRow('应用名称', 'MediaHub')
+        this.studyInfoRow('当前版本', '1.0.0')
+        this.studyInfoRow('基础项目', 'FinVideo v0.3.3')
+        this.studyInfoRow('上游提交', 'OHPG/FinVideo d76959b')
         this.studyInfoRow('构建验证', 'hvigor assembleHap 通过')
-        this.studyInfoRow('运行验证', 'HarmonyOS 模拟器启动成功')
+        this.studyInfoRow('运行设备', '手机 / 平板 / 2in1')
+        this.studyInfoRow('许可协议', 'GPL-3.0')
       }
       .width(CommonConstants.FULL_PERCENT)
       .padding({
@@ -65,39 +66,6 @@ struct AboutPage {
       })
 
       Blank()
-
-      Row({space: CommonConstants.SPACE_4}) {
-        Text($r('app.string.prefer_about_qq_group'))
-        .fontSize(16)
-        .fontColor($r('sys.color.ohos_id_color_text_secondary'))
-
-        Text($r('app.string.prefer_about_qq_group_value'))
-          .fontSize(16)
-          .fontColor($r('sys.color.ohos_id_color_component_activated'))
-          .onClick(() => {
-            let text = getContext().resourceManager
-              .getStringSync($r('app.string.prefer_about_qq_group_value'))
-            const pasteboardData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
-            const systemPasteboard = pasteboard.getSystemPasteboard();
-            systemPasteboard.setData(pasteboardData);
-            this.getUIContext().getPromptAction().showToast({message: $r('app.string.prefer_about_qq_group_copied')})
-          })
-      }
-
-      Row({space: CommonConstants.SPACE_4}) {
-        Text($r('app.string.prefer_about_official_web'))
-        .fontSize(16)
-        .fontColor($r('sys.color.ohos_id_color_text_secondary'))
-
-        Text($r('app.string.prefer_about_official_web_value'))
-        .fontSize(16)
-        .fontColor($r('sys.color.ohos_id_color_component_activated'))
-          .onClick(() => {
-            WebTool.openBrowser(getContext()
-              , getContext().resourceManager
-                .getStringSync($r('app.string.prefer_about_official_web_value')))
-          })
-      }
 
       Stack()
         .width(CommonConstants.FULL_PERCENT)

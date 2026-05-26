@@ -7,8 +7,7 @@
     "deviceTypes": [
       "phone",
       "tablet",
-      "2in1",
-      "car"
+      "2in1"
     ],
     "deliveryWithInstall": true,
     "installationFree": false,
@@ -34,6 +33,38 @@
             ]
           }
         ]
+      }
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET",
+        "reason": "$string:permission_internet_reason",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "always"
+        }
+      },
+      {
+        "name": "ohos.permission.WRITE_IMAGEVIDEO",
+        "reason": "$string:permission_write_imagevideo_reason",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        }
+      },
+      {
+        "name": "ohos.permission.READ_PASTEBOARD",
+        "reason": "$string:permission_read_pasteboard_reason",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        }
       }
     ]
   }
