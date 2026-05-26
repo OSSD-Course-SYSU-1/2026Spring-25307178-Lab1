@@ -128,7 +128,7 @@ small,
 .address-list {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
   gap: 10px;
 }
 
@@ -141,13 +141,11 @@ small,
 
 .address-item a {
   flex: 1;
-  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 10px;
   color: var(--accent-strong);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   text-decoration: none;
   background: #fbfcfa;
 }
@@ -293,6 +291,10 @@ progress {
   .top-bar,
   .connection-panel,
   .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .address-list {
     grid-template-columns: 1fr;
   }
 
