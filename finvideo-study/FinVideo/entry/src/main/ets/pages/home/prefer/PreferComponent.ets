@@ -89,6 +89,10 @@ export struct PreferComponent {
         router.push({url: "pages/transfer/TransferPage"})
       })
 
+      this.preferItemBuilder($r('sys.symbol.doc_plaintext'), '跨设备文件流转', () => {
+        router.push({url: "pages/filetransfer/FileTransferPage"})
+      })
+
       this.preferItemBuilder($r('sys.symbol.message'), $r('app.string.prefer_about'), () => {
         router.push({url: "pages/about/AboutPage"})
       })

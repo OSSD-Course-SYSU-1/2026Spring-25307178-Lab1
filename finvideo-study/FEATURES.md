@@ -27,6 +27,7 @@
 7. 播放器支持复制跨设备续播码，偏好页支持导入续播码继续播放。
 8. 按“自由流转”课程文档补充 HarmonyOS 应用接续能力，支持系统跨端迁移视频播放状态和轻量级文件资产。
 9. 按“一次开发，多端部署”课程文档强化手机、平板、2in1 多端布局和交互归一。
+10. 新增独立跨设备无线文件流转页，支持选择文件发送、生成演示文件、接收端刷新列表并保存到本机。
 
 ## 4. 功能一：课程移植信息展示
 
@@ -215,7 +216,34 @@
 
 课堂演示时建议在 DevEco Studio 预览器或模拟器中切换手机、平板、2in1 窗口，依次展示：首页底部 Tab / 左侧 Tab 切换、媒体网格列数变化、双指捏合调整网格密度、详情页宽屏双栏、剧集页多列布局和鼠标 / 键盘焦点反馈。
 
-## 13. 运行演示说明
+## 13. 功能十：跨设备无线文件流转
+
+### 功能说明
+
+为满足“手机和平板能现场互传文件”的演示要求，在“设置 / 偏好”页新增“跨设备文件流转”入口。该页面独立于 FinVideo 视频业务，可以直接用于课堂展示跨设备无线传文件：
+
+1. 发送端点击“选择文件发送”，通过系统文件选择器选取最多 5 个文档或媒体文件。
+2. 应用将选中文件复制到 `context.distributedFilesDir/mediahub-wireless-transfer/`。
+3. 应用同步维护 `mediahub-wireless-transfer-manifest.json` 文件清单，记录文件名、大小、生成时间和分布式目录相对路径。
+4. 接收端打开同一页面后点击“刷新接收列表”，读取分布式文件目录和清单并展示可接收文件。
+5. 接收端点击“保存”，通过系统文件保存器把文件另存到本机目录。
+6. 为避免课堂现场没有合适文件，页面还提供“生成演示文件”，可直接生成一份文本文件用于互传演示。
+
+该功能的核心是分布式文件目录，不依赖视频服务器，也不依赖 Jellyfin / Emby 账号。真机演示时仍需要双端安装同包名、同签名应用，并处于 HarmonyOS 跨设备协同可用环境。
+
+### 涉及文件
+
+- `finvideo-study/WIRELESS_FILE_TRANSFER.md`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/filetransfer/FileTransferPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/filetransfer/WirelessFileTransferStore.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/home/prefer/PreferComponent.ets`
+- `finvideo-study/FinVideo/entry/src/main/resources/base/profile/main_pages.json`
+
+### 演示说明
+
+建议准备一台手机和一台平板，双端登录同一华为账号、开启 Wi-Fi 和蓝牙，并安装同一构建包。手机端进入“设置 / 偏好 -> 跨设备文件流转”，点击“生成演示文件”或“选择文件发送”；平板端进入同一页面点击“刷新接收列表”，看到文件后点击“保存”。
+
+## 14. 运行演示说明
 
 ### 改前版本
 
@@ -225,7 +253,7 @@
 
 `finvideo-study/demo/改后版本.mp4` 展示新增功能后的运行效果，重点体现视频播放、最近播放入口和视频截屏保存等可演示功能。
 
-## 14. 构建与验证
+## 15. 构建与验证
 
 本地验证环境为 DevEco Studio + HarmonyOS 模拟器 `127.0.0.1:5555`。主要验证命令如下：
 
@@ -245,3 +273,4 @@ hdc shell aa start -b com.github.wz167838.mediahub -a EntryAbility
 - 新增的最近播放和视频截屏保存功能已在模拟器中验证。
 - 应用接续相关配置和生命周期代码已通过 `hvigor assembleHap --stacktrace` 构建验证；系统自由流转需要双真机环境验证。
 - 一次开发、多端部署相关布局和交互代码已通过 `hvigor assembleHap --stacktrace` 构建验证；多端视觉效果建议在 DevEco 多设备预览器和真机窗口中继续确认。
+- 跨设备文件流转页面、分布式文件目录写入、文件清单维护和系统文件选择 / 保存入口已通过 `hvigor assembleHap --stacktrace` 构建验证；真实跨设备同步效果需要手机和平板真机环境验证。
