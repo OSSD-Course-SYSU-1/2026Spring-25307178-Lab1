@@ -16,6 +16,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit'
 import { FinTransferSession } from '../../entity/FinTransferSession'
 import { TransferSessionCodec } from '../transfer/TransferSessionCodec'
 import { ContinuationStateStore } from '../../continuation/ContinuationStateStore'
+import { ContinuationFileStore } from '../../continuation/ContinuationFileStore'
 
 const SNAPSHOT_LOG_DOMAIN = 0x0000
 const SNAPSHOT_LOG_TAG = 'FinSnapshot'
@@ -905,6 +906,7 @@ struct PlayerPage {
       try {
         let snapshotImage = await this.packSnapshotImage(pixelMap)
         await this.saveSnapshotToGallery(snapshotImage)
+        ContinuationFileStore.savePreviewImage(snapshotImage.fileName, snapshotImage.buffer)
         promptAction.showToast({ message: "已保存到图库：" + snapshotImage.fileName })
       } finally {
         await pixelMap.release()

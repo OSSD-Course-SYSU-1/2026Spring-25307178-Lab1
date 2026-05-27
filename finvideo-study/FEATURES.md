@@ -25,7 +25,7 @@
 5. 播放器内支持视频画面截屏并保存到系统图库。
 6. 主页、媒体库、收藏和搜索结果支持大小屏响应式适配。
 7. 播放器支持复制跨设备续播码，偏好页支持导入续播码继续播放。
-8. 按“自由流转”课程文档补充 HarmonyOS 应用接续能力，支持系统跨端迁移视频播放状态。
+8. 按“自由流转”课程文档补充 HarmonyOS 应用接续能力，支持系统跨端迁移视频播放状态和轻量级文件资产。
 9. 按“一次开发，多端部署”课程文档强化手机、平板、2in1 多端布局和交互归一。
 
 ## 4. 功能一：课程移植信息展示
@@ -98,6 +98,8 @@
 
 为适配模拟器演示，还补充了保存失败日志和媒体库写入方式修复，避免因短期授权接口不匹配导致“截屏失败”。
 
+为配合“自由流转”文件资产演示，截屏成功后还会把同一张 JPEG 预览图写入 `context.distributedFilesDir/mediahub-continuation/`，作为跨端迁移时可同步的轻量级文件内容。
+
 ### 涉及文件
 
 - `finvideo-study/FinVideo/entry/src/main/ets/pages/player/PlayerPage.ets`
@@ -158,15 +160,18 @@
 1. 在 `module.json5` 的 `EntryAbility` 中配置 `continuable: true`，让系统识别该 Ability 支持迁移。
 2. 源端播放器持续保存当前播放状态，包括媒体 ID、名称、类型、播放进度和时长。
 3. 系统触发自由流转时，`EntryAbility.onContinue()` 将当前播放状态写入 `wantParam`。
-4. 对端应用在 `onCreate()` 或 `onNewWant()` 收到迁移参数后保存为待恢复状态。
-5. 初始化完成后，对端自动进入播放器，并从迁移进度继续播放。
+4. 同时把播放状态写入 `context.distributedFilesDir/mediahub-continuation/mediahub-continuation-session.json`，并在 `wantParam` 中记录清单文件名、大小和文件数量。
+5. 用户使用视频截屏功能后，截屏预览图也会写入同一个分布式文件目录，作为可同步的文件资产。
+6. 对端应用在 `onCreate()` 或 `onNewWant()` 收到迁移参数后，优先读取分布式文件清单；如果文件暂未同步，则回退读取 `wantParam` 中的内联状态。
+7. 初始化完成后，对端自动进入播放器，并从迁移进度继续播放。
 
-本功能对应 PPT 中“小状态通过迁移框架 / Want 参数传递”的场景。视频文件和流媒体本身不放入 `wantParam`，避免超过课程文档中提到的小数据迁移限制；目标设备仍使用本机配置的 Jellyfin/Emby 服务器重新拉流。
+本功能同时覆盖 PPT 中“小状态通过迁移框架 / Want 参数传递”和“文件类内容使用分布式文件目录”的场景。视频文件和流媒体本身不放入 `wantParam`，避免超过课程文档中提到的小数据迁移限制；目标设备仍使用本机配置的 Jellyfin/Emby 服务器重新拉流。
 
 ### 涉及文件
 
 - `finvideo-study/FinVideo/entry/src/main/module.json5`
 - `finvideo-study/FinVideo/entry/src/main/ets/ability/entry/EntryAbility.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/continuation/ContinuationFileStore.ets`
 - `finvideo-study/FinVideo/entry/src/main/ets/continuation/ContinuationStateStore.ets`
 - `finvideo-study/FinVideo/entry/src/main/ets/pages/player/PlayerPage.ets`
 - `finvideo-study/FinVideo/entry/src/main/ets/pages/splash/SplashPage.ets`
