@@ -8,10 +8,20 @@ export struct MediaItem {
 
   @Require @State item?: FinItem = undefined
 
-  @State itemWidth: string | number = CommonConstants.FULL_PERCENT
+  @Prop itemWidth: string | number = CommonConstants.FULL_PERCENT
+
+  @State private hovered: boolean = false
+
+  @State private focused: boolean = false
 
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as FinItem
+    this.hovered = false
+    this.focused = false
+  }
+
+  private cardScale(): number {
+    return (this.hovered || this.focused) ? 1.03 : 1
   }
 
   build() {
@@ -29,6 +39,18 @@ export struct MediaItem {
         .width(CommonConstants.FULL_PERCENT)
     }
     .width(this.itemWidth)
+    .scale({ x: this.cardScale(), y: this.cardScale() })
+    .animation({ duration: 120, curve: Curve.EaseOut })
+    .focusable(true)
+    .onHover((isHover: boolean) => {
+      this.hovered = isHover
+    })
+    .onFocus(() => {
+      this.focused = true
+    })
+    .onBlur(() => {
+      this.focused = false
+    })
     .onClick(() => {
       MediaRouter.openDetail(this.item!)
     })

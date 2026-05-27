@@ -2,8 +2,9 @@ import { CommonConstants } from "../../common/CommonConstants"
 import { ShowSeasonArgs } from "./season/ShowSeasonArgs"
 import { ShowEpisodeSheet } from "../../../sheet/ShowEpisodeSheet"
 import { DetailArgs } from "../DetailArgs"
-import { FinItem } from "@ohpg/fin-core"
+import { BreakpointSystem, FinItem } from "@ohpg/fin-core"
 import router from "@ohos.router"
+import { ResponsiveLayout } from "../../../adaptive/ResponsiveLayout"
 
 /**
  * @Author peerless2012
@@ -50,6 +51,8 @@ export struct ShowSeasons {
 
   @Prop args: DetailArgs
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   build() {
     Column({space: CommonConstants.SPACE_12}) {
       Text("季")
@@ -73,7 +76,7 @@ export struct ShowSeasons {
       .scrollBar(BarState.Off)
       .listDirection(Axis.Horizontal)
       .width(CommonConstants.FULL_PERCENT)
-      .height(CommonConstants.ITEM_HEIGHT)
+      .height(ResponsiveLayout.isCompact(this.currentWidthBreakpoint) ? CommonConstants.ITEM_HEIGHT : 260)
     }
     .alignItems(HorizontalAlign.Start)
     .width(CommonConstants.FULL_PERCENT)
@@ -88,8 +91,14 @@ struct ShowSeasonItem {
 
   @Require @State item?: FinItem = undefined
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as FinItem
+  }
+
+  private itemWidth(): number {
+    return ResponsiveLayout.posterCardWidth(this.currentWidthBreakpoint)
   }
 
   build() {
@@ -99,12 +108,12 @@ struct ShowSeasonItem {
         .objectFit(ImageFit.Cover)
         .autoResize(true)
         .borderRadius($r('app.float.lg_border_radius'))
-        .width(CommonConstants.ITEM_WIDTH)
+        .width(this.itemWidth())
         .aspectRatio(CommonConstants.ITEM_RATIO)
       Text(this.item?.name)
     }
-    .width(CommonConstants.ITEM_WIDTH)
-    .height(CommonConstants.ITEM_HEIGHT)
+    .width(this.itemWidth())
+    .height(ResponsiveLayout.isCompact(this.currentWidthBreakpoint) ? CommonConstants.ITEM_HEIGHT : 244)
     .onClick(() => {
       let args: ShowSeasonArgs = {
         id: this.args!.id,

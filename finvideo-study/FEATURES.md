@@ -26,6 +26,7 @@
 6. 主页、媒体库、收藏和搜索结果支持大小屏响应式适配。
 7. 播放器支持复制跨设备续播码，偏好页支持导入续播码继续播放。
 8. 按“自由流转”课程文档补充 HarmonyOS 应用接续能力，支持系统跨端迁移视频播放状态。
+9. 按“一次开发，多端部署”课程文档强化手机、平板、2in1 多端布局和交互归一。
 
 ## 4. 功能一：课程移植信息展示
 
@@ -176,7 +177,40 @@
 
 真机演示需要两台 HarmonyOS NEXT Release 及以上设备，并满足课程文档中的限制：双端登录同一华为账号、开启 Wi-Fi 和蓝牙、双端都安装同包名同签名应用。若课堂环境无法触发系统自由流转入口，仍可使用上一节的“续播码 + 剪贴板”作为功能兜底演示。
 
-## 12. 运行演示说明
+## 12. 功能九：一次开发、多端部署强化
+
+### 功能说明
+
+按 `01.一次开发，多端部署.pptx` 的界面级一多、功能级一多和工程级一多要求继续强化 MediaHub：
+
+1. 新增 `ResponsiveLayout`，集中管理手机、平板、2in1 窗口下的边距、卡片宽度、详情页最大宽度和剧集列数。
+2. 首页顶部从普通 `Row` 改为 `GridRow + GridCol`，小屏标题和搜索框上下排布，中/大屏同排展示。
+3. 媒体库、媒体列表、收藏列表和搜索结果统一使用断点卡片宽度，Grid 自动填充列数。
+4. 电影详情页、剧集详情页在宽屏下居中限宽并切换为左右分栏，小屏仍保持纵向阅读。
+5. 剧集列表页改为 Grid，手机 1 列、平板 2 列、2in1 / 宽屏 3 列。
+6. 海报卡和剧集卡增加鼠标悬浮、键盘焦点反馈；媒体网格增加双指捏合调整密度。
+
+详细说明见 `finvideo-study/MULTI_DEVICE_DEPLOYMENT.md`。
+
+### 涉及文件
+
+- `finvideo-study/MULTI_DEVICE_DEPLOYMENT.md`
+- `finvideo-study/FinVideo/entry/src/main/ets/adaptive/ResponsiveLayout.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/widget/bar/HomeToolBar.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/widget/media/MediaItem.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/widget/media/EpisodeItem.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/home/media/MediaComponent.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/media/MediaListPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/favourite/FavouriteListPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/detail/movie/MoviePage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/detail/show/ShowPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/detail/show/season/ShowSeasonPage.ets`
+
+### 演示说明
+
+课堂演示时建议在 DevEco Studio 预览器或模拟器中切换手机、平板、2in1 窗口，依次展示：首页底部 Tab / 左侧 Tab 切换、媒体网格列数变化、双指捏合调整网格密度、详情页宽屏双栏、剧集页多列布局和鼠标 / 键盘焦点反馈。
+
+## 13. 运行演示说明
 
 ### 改前版本
 
@@ -186,7 +220,7 @@
 
 `finvideo-study/demo/改后版本.mp4` 展示新增功能后的运行效果，重点体现视频播放、最近播放入口和视频截屏保存等可演示功能。
 
-## 13. 构建与验证
+## 14. 构建与验证
 
 本地验证环境为 DevEco Studio + HarmonyOS 模拟器 `127.0.0.1:5555`。主要验证命令如下：
 
@@ -205,3 +239,4 @@ hdc shell aa start -b com.github.wz167838.mediahub -a EntryAbility
 - Jellyfin 测试库视频可进入播放器播放。
 - 新增的最近播放和视频截屏保存功能已在模拟器中验证。
 - 应用接续相关配置和生命周期代码已通过 `hvigor assembleHap --stacktrace` 构建验证；系统自由流转需要双真机环境验证。
+- 一次开发、多端部署相关布局和交互代码已通过 `hvigor assembleHap --stacktrace` 构建验证；多端视觉效果建议在 DevEco 多设备预览器和真机窗口中继续确认。

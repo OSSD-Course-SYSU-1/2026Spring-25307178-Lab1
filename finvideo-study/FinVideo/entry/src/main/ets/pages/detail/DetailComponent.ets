@@ -6,6 +6,7 @@ import LazyDataSource from "../common/LazyDataSource"
 import { PlayerArgs } from "../player/PlayerArgs"
 import { BreakpointSystem, FinItem, FinPerson } from "@ohpg/fin-core"
 import { FinItemType, FinPersonType } from "@ohpg/fin-core"
+import { ResponsiveLayout } from "../../adaptive/ResponsiveLayout"
 
 @Component
 export struct DetailOperate {
@@ -141,7 +142,7 @@ export struct DetailCover {
       .objectFit(ImageFit.Cover)
       .autoResize(true)
       .width(CommonConstants.FULL_PERCENT)
-      .aspectRatio(this.currentWidthBreakpoint <= WidthBreakpoint.WIDTH_SM ? 1.5 : 3)
+      .aspectRatio(ResponsiveLayout.isCompact(this.currentWidthBreakpoint) ? 1.5 : 3)
   }
 
 }
@@ -152,6 +153,8 @@ export struct DetailHeader {
   @StorageLink("Repository") repository?: Repository = undefined
 
   @Prop itemDto: FinItem
+
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
 
   @State collecting: boolean = false
 
@@ -239,8 +242,8 @@ export struct DetailHeader {
       }
     }
     .padding({
-      left: CommonConstants.SPACE_16,
-      right: CommonConstants.SPACE_16
+      left: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
+      right: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
     })
     .alignItems(HorizontalAlign.Start)
     .width(CommonConstants.FULL_PERCENT)
@@ -257,6 +260,8 @@ export struct DetailFooter {
 
   @Require itemDto?: FinItem
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   private personDataSource: LazyDataSource<FinPerson> = new LazyDataSource();
 
   aboutToAppear(): void {
@@ -270,7 +275,7 @@ export struct DetailFooter {
       Text("演职人员")
         .fontSize($r('sys.float.Title_S'))
         .margin({
-          left: CommonConstants.SPACE_16
+          left: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
         })
 
       List({space: CommonConstants.SPACE_12}) {
@@ -280,12 +285,12 @@ export struct DetailFooter {
           }
         })
       }
-      .contentStartOffset(CommonConstants.SPACE_16)
-      .contentEndOffset(CommonConstants.SPACE_16)
+      .contentStartOffset(ResponsiveLayout.pagePadding(this.currentWidthBreakpoint))
+      .contentEndOffset(ResponsiveLayout.pagePadding(this.currentWidthBreakpoint))
       .listDirection(Axis.Horizontal)
       .width(CommonConstants.FULL_PERCENT)
       .scrollBar(BarState.Off)
-      .height(220)
+      .height(ResponsiveLayout.isCompact(this.currentWidthBreakpoint) ? 220 : 250)
     }
     .alignItems(HorizontalAlign.Start)
   }
@@ -304,8 +309,20 @@ struct PersonItem {
 
   @Require @State item?: FinPerson = undefined
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as FinPerson
+  }
+
+  private itemWidth(): number {
+    if (ResponsiveLayout.isCompact(this.currentWidthBreakpoint)) {
+      return 120
+    }
+    if (ResponsiveLayout.isMedium(this.currentWidthBreakpoint)) {
+      return 136
+    }
+    return 152
   }
 
   build() {
@@ -315,8 +332,8 @@ struct PersonItem {
         .borderRadius($r('app.float.lg_border_radius'))
         .objectFit(ImageFit.Cover)
         .autoResize(true)
-        .width(120)
-        .height(180)
+        .width(this.itemWidth())
+        .height(Math.round(this.itemWidth() * 1.5))
       Text(this.item?.name)
         .maxLines(1)
         .ellipsisMode(EllipsisMode.END)
@@ -327,8 +344,8 @@ struct PersonItem {
         .height(20)
     }
     .alignItems(HorizontalAlign.Start)
-    .width(120)
-    .height(220)
+    .width(this.itemWidth())
+    .height(Math.round(this.itemWidth() * 1.5) + 40)
   }
 
 }

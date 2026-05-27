@@ -1,6 +1,7 @@
-import { FinItemType } from "@ohpg/fin-core";
+import { BreakpointSystem, FinItemType } from "@ohpg/fin-core";
 import { CommonConstants } from "@ohpg/fin-framework";
 import { SectionInfo } from "../../entity/SectionInfo";
+import { ResponsiveLayout } from "../../adaptive/ResponsiveLayout";
 
 @Component
 export struct SectionToolBar {
@@ -8,6 +9,8 @@ export struct SectionToolBar {
   @Require @State item?: SectionInfo
 
   @State sectionTitle?: string = undefined
+
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
 
   aboutToAppear(): void {
     switch (this.item?.type) {
@@ -29,8 +32,8 @@ export struct SectionToolBar {
       .fontWeight(FontWeight.Medium)
       .fontFamily(CommonConstants.HARMONY_HEITI_MEDIUM_FONT_FAMILY)
       .padding({
-        right: CommonConstants.SPACE_16,
-        left: CommonConstants.SPACE_16,
+        right: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
+        left: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
         top: CommonConstants.SPACE_8,
         bottom: CommonConstants.SPACE_8
       })

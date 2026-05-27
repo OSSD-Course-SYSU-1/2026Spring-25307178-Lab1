@@ -7,6 +7,7 @@ import { EpisodeItem } from "../../../widget/media/EpisodeItem"
 import { MediaItem } from "../../../widget/media/MediaItem"
 import { GroupInfo } from "../../../entity/GroupInfo"
 import { BreakpointSystem, FinItem, FinItemType } from "@ohpg/fin-core"
+import { ResponsiveLayout } from "../../../adaptive/ResponsiveLayout"
 
 /**
  * @Author peerless2012
@@ -67,35 +68,8 @@ struct FavouriteGroup {
     this.item = params['item'] as GroupInfo
   }
 
-  // 收藏页和首页共用一套断点尺寸，切到大屏后列表不会显得过密。
-  private posterWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 140
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 168
-    }
-    return 196
-  }
-
-  private episodeWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 200
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 260
-    }
-    return 320
-  }
-
   private contentOffset(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return CommonConstants.SPACE_16
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 24
-    }
-    return 32
+    return ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
   }
 
   build() {
@@ -109,9 +83,9 @@ struct FavouriteGroup {
         ForEach(this.item?.items, (item: FinItem) => {
           ListItem() {
             if (item.type === FinItemType.Episode) {
-              EpisodeItem({item: item, itemWidth: this.episodeWidth()})
+              EpisodeItem({item: item, itemWidth: ResponsiveLayout.episodeCardWidth(this.currentWidthBreakpoint)})
             } else {
-              MediaItem({item: item, itemWidth: this.posterWidth()})
+              MediaItem({item: item, itemWidth: ResponsiveLayout.posterCardWidth(this.currentWidthBreakpoint)})
             }
           }
         })

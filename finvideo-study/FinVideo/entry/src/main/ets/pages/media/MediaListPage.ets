@@ -7,6 +7,7 @@ import { ToolBar } from '@ohpg/fin-framework'
 import { MediaItem } from '../../widget/media/MediaItem'
 import { BreakpointSystem, FinItem } from '@ohpg/fin-core'
 import { SortMenu } from '../../widget/menu/SortMenu'
+import { ResponsiveLayout } from '../../adaptive/ResponsiveLayout'
 
 @Entry
 @Component
@@ -20,25 +21,15 @@ struct MediaListPage {
 
   @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
 
-  // 列表页使用和媒体库一致的断点列宽，避免从首页跳转后视觉密度突变。
+  @State gridScale: number = 1
+
+  // Keep the list density aligned with the media library, and allow pinch zoom for classroom demos.
   private gridItemWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 140
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 168
-    }
-    return 196
+    return ResponsiveLayout.gridCardWidth(this.currentWidthBreakpoint, this.gridScale)
   }
 
   private gridPadding(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return CommonConstants.SPACE_16
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 24
-    }
-    return 32
+    return ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
   }
 
   private columnsTemplate(): string {
@@ -77,6 +68,14 @@ struct MediaListPage {
       })
         .width(CommonConstants.FULL_PERCENT)
         .layoutWeight(1)
+        .gesture(PinchGesture({ fingers: 2 })
+          .onActionUpdate((event: GestureEvent) => {
+            if (event.scale > 1.05) {
+              this.gridScale = ResponsiveLayout.clampGridScale(this.gridScale + 0.02)
+            } else if (event.scale < 0.95) {
+              this.gridScale = ResponsiveLayout.clampGridScale(this.gridScale - 0.02)
+            }
+          }))
     }
   }
 

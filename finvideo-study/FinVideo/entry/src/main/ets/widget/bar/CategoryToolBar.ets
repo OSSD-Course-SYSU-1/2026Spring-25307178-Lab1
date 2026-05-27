@@ -2,12 +2,16 @@ import { GroupInfo } from "../../entity/GroupInfo";
 import { CommonConstants } from "../../pages/common/CommonConstants";
 import { FavouriteListArgs } from "../../pages/favourite/FavouriteListArgs";
 import { MediaListArgs } from "../../pages/media/MediaListArgs";
+import { ResponsiveLayout } from "../../adaptive/ResponsiveLayout";
+import { BreakpointSystem } from "@ohpg/fin-core";
 
 @Reusable
 @Component
 export struct CategoryToolBar {
 
   @Require @State item?: GroupInfo = undefined
+
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
 
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as GroupInfo
@@ -51,8 +55,8 @@ export struct CategoryToolBar {
     }
     .alignItems(VerticalAlign.Center)
     .padding({
-      right: CommonConstants.SPACE_16,
-      left: CommonConstants.SPACE_16,
+      right: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
+      left: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
       top: CommonConstants.SPACE_8,
       bottom: CommonConstants.SPACE_8
     })

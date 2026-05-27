@@ -7,6 +7,7 @@ import { FavouriteListArgs } from './FavouriteListArgs'
 import { ToolBar } from '@ohpg/fin-framework'
 import { BreakpointSystem, FinItem, FinItemType } from '@ohpg/fin-core'
 import { EpisodeItem } from '../../widget/media/EpisodeItem'
+import { ResponsiveLayout } from '../../adaptive/ResponsiveLayout'
 
 @Entry
 @Component
@@ -20,25 +21,15 @@ struct FavouriteListPage {
 
   @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
 
-  // 收藏详情页同样跟随窗口断点，保证剧集卡和海报卡在宽屏上更易点选。
+  @State gridScale: number = 1
+
+  // Favourite detail follows the same breakpoint density and pinch scale as the main media grids.
   private gridItemWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 140
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 168
-    }
-    return 196
+    return ResponsiveLayout.gridCardWidth(this.currentWidthBreakpoint, this.gridScale)
   }
 
   private gridPadding(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return CommonConstants.SPACE_16
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 24
-    }
-    return 32
+    return ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
   }
 
   private columnsTemplate(): string {
@@ -79,6 +70,14 @@ struct FavouriteListPage {
       })
         .width(CommonConstants.FULL_PERCENT)
         .layoutWeight(1)
+        .gesture(PinchGesture({ fingers: 2 })
+          .onActionUpdate((event: GestureEvent) => {
+            if (event.scale > 1.05) {
+              this.gridScale = ResponsiveLayout.clampGridScale(this.gridScale + 0.02)
+            } else if (event.scale < 0.95) {
+              this.gridScale = ResponsiveLayout.clampGridScale(this.gridScale - 0.02)
+            }
+          }))
     }
   }
 

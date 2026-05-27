@@ -6,6 +6,7 @@ import { DetailCover, DetailFooter, DetailHeader } from '../DetailComponent'
 import { ScrollRefreshView } from '@ohpg/fin-framework'
 import { BreakpointSystem, FinItem } from '@ohpg/fin-core'
 import { ToolBar } from '@ohpg/fin-framework'
+import { ResponsiveLayout } from '../../../adaptive/ResponsiveLayout'
 
 let movieStorage: LocalStorage = new LocalStorage();
 @Entry(movieStorage)
@@ -30,16 +31,30 @@ struct MoviePage {
   movieScrollView(item?: FinItem) {
     Column({space: CommonConstants.SPACE_12}) {
       DetailCover({itemDto: item})
-      DetailHeader({itemDto: item})
-      if (item && item.person && item.person.length > 0) {
-        DetailFooter({itemDto: item})
+      if (ResponsiveLayout.isCompact(this.currentWidthBreakpoint)) {
+        DetailHeader({itemDto: item})
+        if (item && item.person && item.person.length > 0) {
+          DetailFooter({itemDto: item})
+        }
+      } else {
+        Row({space: ResponsiveLayout.detailGap(this.currentWidthBreakpoint)}) {
+          DetailHeader({itemDto: item})
+            .width(item && item.person && item.person.length > 0 ? '58%' : '100%')
+          if (item && item.person && item.person.length > 0) {
+            DetailFooter({itemDto: item})
+              .width('42%')
+          }
+        }
+        .width(CommonConstants.FULL_PERCENT)
+        .alignItems(VerticalAlign.Top)
       }
     }
     .padding({
       bottom: px2vp(this.avoidArea?.bottomRect.height)
     })
     .alignItems(HorizontalAlign.Start)
-    .width(CommonConstants.FULL_PERCENT)
+    .width(ResponsiveLayout.detailMaxWidth(this.currentWidthBreakpoint))
+    .alignSelf(ItemAlign.Center)
   }
 
   build() {

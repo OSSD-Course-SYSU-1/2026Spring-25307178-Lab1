@@ -1,12 +1,12 @@
 import { CircleShape, window } from '@kit.ArkUI'
 import { Repository } from '../../../../data/Repository'
 import { ShowEpisodeSheet } from '../../../../sheet/ShowEpisodeSheet'
-import { ListRefreshView } from '@ohpg/fin-framework'
 import { CommonConstants } from '../../../common/CommonConstants'
 import { ShowSeasonArgs } from './ShowSeasonArgs'
 import { ShowSeasonViewModel } from './ShowSeasonViewModel'
-import { ToolBar } from '@ohpg/fin-framework'
-import { FinItem } from '@ohpg/fin-core'
+import { GridRefreshView, ToolBar } from '@ohpg/fin-framework'
+import { BreakpointSystem, FinItem } from '@ohpg/fin-core'
+import { ResponsiveLayout } from '../../../../adaptive/ResponsiveLayout'
 
 @Entry
 @Component
@@ -18,9 +18,15 @@ struct ShowSeasonPage {
 
   @StorageProp("currentAvoidArea") avoidArea?: window.AvoidArea = undefined
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   @Builder
-  seasonItemBuilder(item: FinItem, index: number) {
-    SeasonItem({item: item})
+  seasonItemBuilder(item: Object, index: number) {
+    SeasonItem({item: item as FinItem})
+  }
+
+  private columnsTemplate(): string {
+    return `repeat(${ResponsiveLayout.seasonLaneCount(this.currentWidthBreakpoint)}, 1fr)`
   }
 
   build() {
@@ -29,17 +35,20 @@ struct ShowSeasonPage {
         title: this.args.name
       })
 
-      ListRefreshView({
+      GridRefreshView({
         source: this.viewModel,
         itemLayout: this.seasonItemBuilder,
-        listAttribute: (attr) => {
-          attr.divider = {
-            color: Color.Transparent,
-            strokeWidth: CommonConstants.SPACE_12
+        gridAttribute: (attr) => {
+          attr.padding = {
+            left: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
+            right: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
+            bottom: px2vp(this.avoidArea?.bottomRect.height)
           }
+          attr.rowsGap = CommonConstants.SPACE_12
+          attr.columnsGap = CommonConstants.SPACE_12
+          attr.columnsTemplate = this.columnsTemplate()
           attr.width = CommonConstants.FULL_PERCENT
           attr.height = CommonConstants.FULL_PERCENT
-          attr.contentEndOffset = px2vp(this.avoidArea?.bottomRect.height)
         }
       })
         .width(CommonConstants.FULL_PERCENT)
@@ -61,8 +70,18 @@ export struct SeasonItem {
 
   @Require @State item?: FinItem = undefined
 
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
+
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as FinItem
+  }
+
+  private coverWidth(): number {
+    return ResponsiveLayout.seasonCoverWidth(this.currentWidthBreakpoint)
+  }
+
+  private coverHeight(): number {
+    return Math.round(this.coverWidth() * 0.5625)
   }
 
   build() {
@@ -72,8 +91,8 @@ export struct SeasonItem {
         .alt($r('app.media.alt'))
         .objectFit(ImageFit.Cover)
         .autoResize(true)
-        .width(160)
-        .height(90)
+        .width(this.coverWidth())
+        .height(this.coverHeight())
         .borderRadius($r('app.float.lg_border_radius'))
         .alignRules({
           center: {
@@ -132,7 +151,7 @@ export struct SeasonItem {
       Text(this.item?.overview)
         .id("episode_overview")
         .fontSize($r('sys.float.Body_S'))
-        .maxLines(5)
+        .maxLines(ResponsiveLayout.isCompact(this.currentWidthBreakpoint) ? 5 : 4)
         .textAlign(TextAlign.Start)
         .align(Alignment.TopStart)
         .textOverflow({
@@ -166,7 +185,7 @@ export struct SeasonItem {
       right: CommonConstants.SPACE_16,
     })
     .width(CommonConstants.FULL_PERCENT)
-    .height(100)
+    .height(ResponsiveLayout.seasonItemHeight(this.currentWidthBreakpoint))
     .onClick(() => {
       let sheet = new ShowEpisodeSheet(this.getUIContext(), this.item!)
       sheet.show()

@@ -10,12 +10,15 @@ import LazyDataSource from '../common/LazyDataSource'
 import { MediaItem } from '../../widget/media/MediaItem'
 import { EpisodeItem } from '../../widget/media/EpisodeItem'
 import { BreakpointSystem, FinItem, FinItemType } from '@ohpg/fin-core'
+import { ResponsiveLayout } from '../../adaptive/ResponsiveLayout'
 
 @Entry
 @Component
 struct SearchPage {
 
   @StorageProp("currentAvoidArea") avoidArea?: window.AvoidArea = undefined
+
+  @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
 
   private args: SearchArgs = router.getParams() as SearchArgs
 
@@ -84,8 +87,8 @@ struct SearchPage {
       }
       .width(CommonConstants.FULL_PERCENT)
       .padding({
-        left: CommonConstants.SPACE_16,
-        right: CommonConstants.SPACE_16,
+        left: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
+        right: ResponsiveLayout.pagePadding(this.currentWidthBreakpoint),
         bottom: CommonConstants.SPACE_8
       })
 
@@ -124,25 +127,12 @@ struct SectionPo {
     this.itemData.dataArray = this.item?.items!
   }
 
-  // 搜索结果横向海报列表随断点增宽，方便在大屏上展示更多封面细节。
   private itemWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 140
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 168
-    }
-    return 196
+    return ResponsiveLayout.posterCardWidth(this.currentWidthBreakpoint)
   }
 
   private contentOffset(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return CommonConstants.SPACE_16
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 24
-    }
-    return 32
+    return ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
   }
 
   build() {
@@ -179,25 +169,12 @@ struct SectionLand {
     this.itemData.dataArray = this.item?.items!
   }
 
-  // 剧集横卡比海报更宽，宽屏下同步放大以保留标题可读性。
   private itemWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 200
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 260
-    }
-    return 320
+    return ResponsiveLayout.episodeCardWidth(this.currentWidthBreakpoint)
   }
 
   private contentOffset(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return CommonConstants.SPACE_16
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 24
-    }
-    return 32
+    return ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
   }
 
   build() {

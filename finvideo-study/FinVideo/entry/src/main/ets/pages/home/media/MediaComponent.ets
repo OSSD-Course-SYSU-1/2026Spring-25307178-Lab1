@@ -5,6 +5,7 @@ import { GridRefreshView } from "@ohpg/fin-framework";
 import { HomeToolBar } from "../../../widget/bar/HomeToolBar";
 import { MediaRouter } from "../../common/MediaRouter";
 import { BreakpointSystem, FinItem } from "@ohpg/fin-core";
+import { ResponsiveLayout } from "../../../adaptive/ResponsiveLayout";
 
 /**
  * @Author peerless2012
@@ -20,25 +21,15 @@ export struct MediaComponent {
 
   @StorageProp(BreakpointSystem.CURRENT_WIDTH_BREAKPOINT) currentWidthBreakpoint: WidthBreakpoint = WidthBreakpoint.WIDTH_SM
 
-  // Grid 的 auto-fit 列宽随断点增长，使媒体库在大小屏上都保持合适密度。
+  @State gridScale: number = 1
+
+  // Grid uses breakpoint width plus pinch scale, matching the PPT's responsive grid and unified gestures.
   private gridItemWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 140
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 168
-    }
-    return 196
+    return ResponsiveLayout.gridCardWidth(this.currentWidthBreakpoint, this.gridScale)
   }
 
   private gridPadding(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return CommonConstants.SPACE_16
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 24
-    }
-    return 32
+    return ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
   }
 
   private columnsTemplate(): string {
@@ -75,6 +66,14 @@ export struct MediaComponent {
       })
         .width(CommonConstants.FULL_PERCENT)
         .layoutWeight(1)
+        .gesture(PinchGesture({ fingers: 2 })
+          .onActionUpdate((event: GestureEvent) => {
+            if (event.scale > 1.05) {
+              this.gridScale = ResponsiveLayout.clampGridScale(this.gridScale + 0.02)
+            } else if (event.scale < 0.95) {
+              this.gridScale = ResponsiveLayout.clampGridScale(this.gridScale - 0.02)
+            }
+          }))
     }
   }
 

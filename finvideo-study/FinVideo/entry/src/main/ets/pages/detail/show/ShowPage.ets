@@ -8,6 +8,7 @@ import { ShowNextUp, ShowSeasons } from './ShowComponent'
 import { ScrollRefreshView } from '@ohpg/fin-framework'
 import { ToolBar } from '@ohpg/fin-framework'
 import { BreakpointSystem } from '@ohpg/fin-core'
+import { ResponsiveLayout } from '../../../adaptive/ResponsiveLayout'
 
 let showStorage: LocalStorage = new LocalStorage();
 @Entry(showStorage)
@@ -32,26 +33,25 @@ struct ShowPage {
   showScrollView(info?: ShowInfo) {
     Column({space: CommonConstants.SPACE_12}) {
       DetailCover({itemDto: info?.show})
-      if (this.currentWidthBreakpoint <= WidthBreakpoint.WIDTH_SM) {
+      if (ResponsiveLayout.isCompact(this.currentWidthBreakpoint)) {
         DetailHeader({itemDto: info?.show})
-        // 季及接下来
+        // Compact screens keep a single reading column.
         if (info?.nextUp) {
           ShowNextUp({
             nextDto: info.nextUp
           })
         }
       } else {
-        Row() {
-          // 简介
+        Row({space: ResponsiveLayout.detailGap(this.currentWidthBreakpoint)}) {
+          // Expanded screens use a two-column detail area.
           DetailHeader({itemDto: info?.show})
-            .width(info?.nextUp ? '50%' : '100%')
+            .width(info?.nextUp ? '58%' : '100%')
             .height('auto')
-          // 季及接下来
           if (info?.nextUp) {
             ShowNextUp({
               nextDto: info.nextUp
             })
-              .width('50%')
+              .width('42%')
               .height('auto')
           }
         }
@@ -72,7 +72,8 @@ struct ShowPage {
     .padding({
       bottom: px2vp(this.avoidArea?.bottomRect.height)
     })
-    .width(CommonConstants.FULL_PERCENT)
+    .width(ResponsiveLayout.detailMaxWidth(this.currentWidthBreakpoint))
+    .alignSelf(ItemAlign.Center)
   }
 
   build() {

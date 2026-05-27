@@ -7,6 +7,7 @@ import { MediaItem } from '../../../widget/media/MediaItem';
 import { EpisodeItem } from '../../../widget/media/EpisodeItem';
 import { GroupInfo } from '../../../entity/GroupInfo';
 import { BreakpointSystem, FinItem } from '@ohpg/fin-core';
+import { ResponsiveLayout } from '../../../adaptive/ResponsiveLayout';
 
 /**
  * @Author peerless2012
@@ -68,35 +69,8 @@ struct MainNormalGroup {
     this.item = params['item'] as GroupInfo
   }
 
-  // 小屏保持原始手机布局，中/大屏放大卡片，便于平板和宽屏窗口演示。
-  private posterWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 140
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 168
-    }
-    return 196
-  }
-
-  private episodeWidth(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return 200
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 260
-    }
-    return 320
-  }
-
   private contentOffset(): number {
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_SM) {
-      return CommonConstants.SPACE_16
-    }
-    if (this.currentWidthBreakpoint === WidthBreakpoint.WIDTH_MD) {
-      return 24
-    }
-    return 32
+    return ResponsiveLayout.pagePadding(this.currentWidthBreakpoint)
   }
 
   build() {
@@ -108,9 +82,13 @@ struct MainNormalGroup {
         ForEach(this.item?.items, (item: FinItem) => {
           ListItem() {
             if (this.item?.type === "Normal" || this.item?.type === "Recent") {
-              MediaItem({item: item, itemWidth: this.posterWidth()})
+              MediaItem({item: item, itemWidth: ResponsiveLayout.posterCardWidth(this.currentWidthBreakpoint)})
             } else {
-              EpisodeItem({item: item, progress: this.item?.type === 'Continue', itemWidth: this.episodeWidth()})
+              EpisodeItem({
+                item: item,
+                progress: this.item?.type === 'Continue',
+                itemWidth: ResponsiveLayout.episodeCardWidth(this.currentWidthBreakpoint)
+              })
             }
           }
         })

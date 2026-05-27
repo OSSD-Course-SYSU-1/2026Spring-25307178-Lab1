@@ -8,12 +8,22 @@ export struct EpisodeItem {
 
   @Require @State item?: FinItem = undefined
 
-  @State progress: boolean = false
+  @Prop progress: boolean = false
 
-  @State itemWidth: string | number = 200
+  @Prop itemWidth: string | number = 200
+
+  @State private hovered: boolean = false
+
+  @State private focused: boolean = false
 
   aboutToReuse(params: Record<string, object>): void {
     this.item = params['item'] as FinItem
+    this.hovered = false
+    this.focused = false
+  }
+
+  private cardScale(): number {
+    return (this.hovered || this.focused) ? 1.03 : 1
   }
 
   build() {
@@ -53,6 +63,18 @@ export struct EpisodeItem {
       }
     }
     .width(this.itemWidth)
+    .scale({ x: this.cardScale(), y: this.cardScale() })
+    .animation({ duration: 120, curve: Curve.EaseOut })
+    .focusable(true)
+    .onHover((isHover: boolean) => {
+      this.hovered = isHover
+    })
+    .onFocus(() => {
+      this.focused = true
+    })
+    .onBlur(() => {
+      this.focused = false
+    })
     .onClick(() => {
       let sheet = new ShowEpisodeSheet(this.getUIContext(), this.item!)
       sheet.show()
