@@ -3,6 +3,7 @@ import { FinRouter } from '@ohpg/fin-framework'
 import { PrivacyDialog } from '@ohpg/fin-framework'
 import { Repository } from '../../data/Repository'
 import { AppPrefer } from '../../prefer/AppPrefer'
+import { ContinuationStateStore } from '../../continuation/ContinuationStateStore'
 
 @Entry
 @Component
@@ -63,7 +64,9 @@ struct SplashPage {
   private enterHomeOrAddServer() {
     let activeInfo = this.repository?.getActiveInfo()
     if (activeInfo) {
-      router.replaceUrl({url: 'pages/home/HomePage'})
+      if (!ContinuationStateStore.openPendingSession(true)) {
+        router.replaceUrl({url: 'pages/home/HomePage'})
+      }
     } else {
       FinRouter.auth(this.getUIContext(), true)
     }

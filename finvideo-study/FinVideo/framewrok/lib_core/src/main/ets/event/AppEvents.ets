@@ -16,4 +16,9 @@ export class AppEvents {
    */
   public static readonly EVENT_RECENT_PLAYBACK_CHANGED = "event_recent_playback_changed"
 
+  /**
+   * System continuation payload received from UIAbility onCreate/onNewWant.
+   */
+  public static readonly EVENT_CONTINUATION_RECEIVED = "event_continuation_received"
+
 }

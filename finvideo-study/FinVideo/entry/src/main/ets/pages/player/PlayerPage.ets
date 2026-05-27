@@ -15,6 +15,7 @@ import { photoAccessHelper } from '@kit.MediaLibraryKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { FinTransferSession } from '../../entity/FinTransferSession'
 import { TransferSessionCodec } from '../transfer/TransferSessionCodec'
+import { ContinuationStateStore } from '../../continuation/ContinuationStateStore'
 
 const SNAPSHOT_LOG_DOMAIN = 0x0000
 const SNAPSHOT_LOG_TAG = 'FinSnapshot'
@@ -163,6 +164,7 @@ struct PlayerPage {
     })
     this.videoController.onProgressChange((progress) => {
       this.progress = progress
+      this.updateContinuationSession(progress)
     })
     this.videoController.onError((error) => {
       this.loading = false
@@ -193,6 +195,7 @@ struct PlayerPage {
     if (item) {
       // 从首页、剧集列表或上一集/下一集进入时都统一记录一次。
       this.viewModel.recordRecentPlayback(item)
+      this.updateContinuationSession(this.progress > 0 ? this.progress : 0)
     }
     let array = this.viewModel.itemDtoArray
     if (!this.itemDto || !array) {
@@ -1093,16 +1096,16 @@ struct PlayerPage {
       startPosition = this.duration - 1000
     }
     this.seekTo(startPosition)
+    this.updateContinuationSession(startPosition)
     promptAction.showToast({ message: '已从跨设备进度继续播放' })
   }
 
-  private async copyTransferSession(): Promise<void> {
-    if (!this.itemDto || !this.videoController.player) {
-      promptAction.showToast({ message: '视频准备好后再复制续播码' })
-      return
+  private buildTransferSession(position?: number): FinTransferSession | undefined {
+    if (!this.itemDto) {
+      return undefined
     }
-    let currentPosition = this.videoController.player.getPosition()
-    let session: FinTransferSession = {
+    let currentPosition = position ?? this.videoController.player?.getPosition() ?? this.progress
+    return {
       version: 1,
       id: this.itemDto.id,
       name: this.itemDto.name,
@@ -1110,6 +1113,21 @@ struct PlayerPage {
       position: currentPosition > 0 ? currentPosition : 0,
       duration: this.duration > 0 ? this.duration : 0,
       createdAt: Date.now()
+    }
+  }
+
+  private updateContinuationSession(position?: number): void {
+    let session = this.buildTransferSession(position)
+    if (session) {
+      ContinuationStateStore.saveCurrentSession(session)
+    }
+  }
+
+  private async copyTransferSession(): Promise<void> {
+    let session = this.buildTransferSession()
+    if (!session || !this.videoController.player) {
+      promptAction.showToast({ message: '视频准备好后再复制续播码' })
+      return
     }
     try {
       // 续播码只携带媒体 id 和进度；另一台设备仍使用自己的服务器配置拉流。
@@ -1189,6 +1207,7 @@ struct PlayerPage {
   }
 
   onPageHide(): void {
+    this.updateContinuationSession()
     if (this.state === 'playing' && this.videoController.player) {
       this.videoController.player.pause()
       this.shouldResumePlay = true
@@ -1196,6 +1215,7 @@ struct PlayerPage {
   }
 
   aboutToDisappear(): void {
+    ContinuationStateStore.clearCurrentSession()
     this.clearUITimeout()
     this.videoController?.offStateChange()
     this.videoController?.offError()

@@ -25,6 +25,7 @@
 5. 播放器内支持视频画面截屏并保存到系统图库。
 6. 主页、媒体库、收藏和搜索结果支持大小屏响应式适配。
 7. 播放器支持复制跨设备续播码，偏好页支持导入续播码继续播放。
+8. 按“自由流转”课程文档补充 HarmonyOS 应用接续能力，支持系统跨端迁移视频播放状态。
 
 ## 4. 功能一：课程移植信息展示
 
@@ -147,7 +148,35 @@
 - `finvideo-study/FinVideo/entry/src/main/ets/pages/home/prefer/PreferComponent.ets`
 - `finvideo-study/FinVideo/entry/src/main/resources/base/profile/main_pages.json`
 
-## 11. 运行演示说明
+## 11. 功能八：HarmonyOS 自由流转应用接续
+
+### 功能说明
+
+按 `02.自由流转.pptx` 的“跨端迁移开发”流程补充系统级应用接续能力：
+
+1. 在 `module.json5` 的 `EntryAbility` 中配置 `continuable: true`，让系统识别该 Ability 支持迁移。
+2. 源端播放器持续保存当前播放状态，包括媒体 ID、名称、类型、播放进度和时长。
+3. 系统触发自由流转时，`EntryAbility.onContinue()` 将当前播放状态写入 `wantParam`。
+4. 对端应用在 `onCreate()` 或 `onNewWant()` 收到迁移参数后保存为待恢复状态。
+5. 初始化完成后，对端自动进入播放器，并从迁移进度继续播放。
+
+本功能对应 PPT 中“小状态通过迁移框架 / Want 参数传递”的场景。视频文件和流媒体本身不放入 `wantParam`，避免超过课程文档中提到的小数据迁移限制；目标设备仍使用本机配置的 Jellyfin/Emby 服务器重新拉流。
+
+### 涉及文件
+
+- `finvideo-study/FinVideo/entry/src/main/module.json5`
+- `finvideo-study/FinVideo/entry/src/main/ets/ability/entry/EntryAbility.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/continuation/ContinuationStateStore.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/player/PlayerPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/splash/SplashPage.ets`
+- `finvideo-study/FinVideo/entry/src/main/ets/pages/home/HomePage.ets`
+- `finvideo-study/FinVideo/framewrok/lib_core/src/main/ets/event/AppEvents.ets`
+
+### 演示说明
+
+真机演示需要两台 HarmonyOS NEXT Release 及以上设备，并满足课程文档中的限制：双端登录同一华为账号、开启 Wi-Fi 和蓝牙、双端都安装同包名同签名应用。若课堂环境无法触发系统自由流转入口，仍可使用上一节的“续播码 + 剪贴板”作为功能兜底演示。
+
+## 12. 运行演示说明
 
 ### 改前版本
 
@@ -157,7 +186,7 @@
 
 `finvideo-study/demo/改后版本.mp4` 展示新增功能后的运行效果，重点体现视频播放、最近播放入口和视频截屏保存等可演示功能。
 
-## 12. 构建与验证
+## 13. 构建与验证
 
 本地验证环境为 DevEco Studio + HarmonyOS 模拟器 `127.0.0.1:5555`。主要验证命令如下：
 
@@ -166,7 +195,7 @@ cd finvideo-study/FinVideo
 ohpm install
 hvigor assembleHap --stacktrace
 hdc install -r entry/build/default/outputs/default/entry-default-unsigned.hap
-hdc shell aa start -b org.ohpg.fin.video -a EntryAbility
+hdc shell aa start -b com.github.wz167838.mediahub -a EntryAbility
 ```
 
 验证结果：
@@ -175,3 +204,4 @@ hdc shell aa start -b org.ohpg.fin.video -a EntryAbility
 - 应用可安装并在 HarmonyOS 模拟器启动。
 - Jellyfin 测试库视频可进入播放器播放。
 - 新增的最近播放和视频截屏保存功能已在模拟器中验证。
+- 应用接续相关配置和生命周期代码已通过 `hvigor assembleHap --stacktrace` 构建验证；系统自由流转需要双真机环境验证。

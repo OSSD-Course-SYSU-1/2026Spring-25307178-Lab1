@@ -4,7 +4,8 @@ import { MainComponent } from './main/MainComponent';
 import { PreferComponent } from './prefer/PreferComponent';
 import { MediaComponent } from './media/MediaComponent';
 import { CommonConstants } from '../common/CommonConstants';
-import { BreakpointSystem } from '@ohpg/fin-core';
+import { AppEventHub, AppEvents, BreakpointSystem } from '@ohpg/fin-core';
+import { ContinuationStateStore } from '../../continuation/ContinuationStateStore';
 
 @Entry
 @Component
@@ -20,8 +21,14 @@ struct HomePage {
 
   private tabsController: TabsController = new TabsController();
 
-  aboutToAppear(): void {
+  private continuationCallback?: Function = undefined
 
+  aboutToAppear(): void {
+    this.continuationCallback = () => {
+      ContinuationStateStore.openPendingSession(false)
+    }
+    AppEventHub.on(AppEvents.EVENT_CONTINUATION_RECEIVED, this.continuationCallback)
+    ContinuationStateStore.openPendingSession(false)
   }
 
   @Builder TabBuilder(title: ResourceStr, targetIndex: number, img: Resource) {
@@ -87,6 +94,10 @@ struct HomePage {
   }
 
   aboutToDisappear(): void {
+    if (this.continuationCallback) {
+      AppEventHub.off(AppEvents.EVENT_CONTINUATION_RECEIVED, this.continuationCallback)
+      this.continuationCallback = undefined
+    }
   }
 
 }
