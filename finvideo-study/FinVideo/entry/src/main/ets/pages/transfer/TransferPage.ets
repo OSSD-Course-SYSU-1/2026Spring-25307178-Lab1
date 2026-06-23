@@ -1,7 +1,7 @@
-import { promptAction, router } from '@kit.ArkUI'
 import { pasteboard } from '@kit.BasicServicesKit'
 import { ToolBar } from '@ohpg/fin-framework'
 import { TimeTool } from '@ohpg/fin-core'
+import { DeviceCapability } from '../../capability/DeviceCapability'
 import { FinTransferSession } from '../../entity/FinTransferSession'
 import { CommonConstants } from '../common/CommonConstants'
 import { PlayerArgs } from '../player/PlayerArgs'
@@ -12,6 +12,13 @@ import { TransferSessionCodec } from './TransferSessionCodec'
 struct TransferPage {
   @State transferCode: string = ''
   @State session?: FinTransferSession = undefined
+
+  private showToast(message: string): void {
+    try {
+      this.getUIContext().getPromptAction().showToast({ message: message })
+    } catch (_) {
+    }
+  }
 
   private updateTransferCode(code: string): void {
     this.transferCode = code.trim()
@@ -27,12 +34,16 @@ struct TransferPage {
   }
 
   private async readFromClipboard(): Promise<void> {
+    if (!DeviceCapability.supportsPasteboard()) {
+      this.showToast('Pasteboard is unavailable. Paste the continuation code manually.')
+      return
+    }
     try {
       let data = await pasteboard.getSystemPasteboard().getData()
       this.updateTransferCode(data.getPrimaryText())
-      promptAction.showToast({ message: '已读取剪贴板续播码' })
+      this.showToast('已读取剪贴板续播码')
     } catch (error) {
-      promptAction.showToast({ message: '读取剪贴板失败，请手动粘贴续播码' })
+      this.showToast('读取剪贴板失败，请手动粘贴续播码')
     }
   }
 
@@ -45,9 +56,9 @@ struct TransferPage {
         type: nextSession.type,
         startPosition: nextSession.position
       }
-      router.pushUrl({ url: 'pages/player/PlayerPage', params: args })
+      this.getUIContext().getRouter().pushUrl({ url: 'pages/player/PlayerPage', params: args })
     } catch (error) {
-      promptAction.showToast({ message: '续播码无效，请重新复制' })
+      this.showToast('续播码无效，请重新复制')
     }
   }
 
@@ -64,6 +75,13 @@ struct TransferPage {
             this.updateTransferCode(value)
           })
 
+        if (!DeviceCapability.supportsPasteboard()) {
+          Text('Pasteboard unavailable. Paste the code manually.')
+            .fontSize(12)
+            .fontColor($r('sys.color.ohos_id_color_text_secondary'))
+            .width(CommonConstants.FULL_PERCENT)
+        }
+
         Row({ space: CommonConstants.SPACE_12 }) {
           PasteButton({ icon: PasteIconStyle.LINES, text: PasteDescription.PASTE, buttonType: ButtonType.Capsule })
             .height(40)
@@ -71,7 +89,7 @@ struct TransferPage {
               if (result === PasteButtonOnClickResult.SUCCESS) {
                 this.readFromClipboard()
               } else {
-                promptAction.showToast({ message: '请授权读取剪贴板后重试' })
+                this.showToast('请授权读取剪贴板后重试')
               }
             })
 

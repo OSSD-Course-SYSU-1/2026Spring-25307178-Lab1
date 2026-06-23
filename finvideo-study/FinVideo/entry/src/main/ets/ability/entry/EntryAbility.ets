@@ -4,6 +4,7 @@ import { window } from '@kit.ArkUI';
 import { AppEventHub, AppEvents, BreakpointSystem } from '@ohpg/fin-core';
 import { AvoidAreaSystem } from '@ohpg/fin-core';
 import { DeviceUtil } from '@ohpg/fin-framework';
+import { DeviceCapability } from '../../capability/DeviceCapability';
 import { ContinuationStateStore } from '../../continuation/ContinuationStateStore';
 
 export default class EntryAbility extends UIAbility {
@@ -82,6 +83,10 @@ export default class EntryAbility extends UIAbility {
   }
 
   private activateContinuation(): void {
+    if (!DeviceCapability.supportsAppContinuation()) {
+      hilog.warn(0x0000, 'testTag', '%{public}s', 'Mission continuation unsupported on this device');
+      return;
+    }
     this.context.setMissionContinueState(AbilityConstant.ContinueState.ACTIVE).then(() => {
       hilog.info(0x0000, 'testTag', '%{public}s', 'Mission continuation activated');
     }).catch((error: Error) => {

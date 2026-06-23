@@ -2,7 +2,6 @@ import { HomeToolBar } from "../../../widget/bar/HomeToolBar"
 import { CommonConstants } from "../../common/CommonConstants"
 import { ActiveInfo, AppStorageKeys } from '@ohpg/fin-core'
 import { FinRouter} from '@ohpg/fin-framework'
-import router from "@ohos.router"
 
 /**
  * @Author peerless2012
@@ -15,6 +14,13 @@ import router from "@ohos.router"
 export struct PreferComponent {
 
   @StorageProp(AppStorageKeys.KEY_ACTIVE_INFO) activeInfo?: ActiveInfo = undefined
+
+  private pushPage(url: string): void {
+    try {
+      this.getUIContext().getRouter().pushUrl({ url: url })
+    } catch (_) {
+    }
+  }
 
   @Builder
   preferItemBuilder(icon: Resource, title: ResourceStr, callback: Callback<void>) {
@@ -78,39 +84,39 @@ export struct PreferComponent {
       })
 
       this.preferItemBuilder($r('sys.symbol.satellite_map_fill'), $r('app.string.prefer_interface'), () => {
-        router.push({url: "pages/interface/InterfacePage"})
+        this.pushPage("pages/interface/InterfacePage")
       })
 
       this.preferItemBuilder($r('sys.symbol.play_video'), $r('app.string.prefer_video'), () => {
-        router.push({url: "pages/setting/VideoSettingPage"})
+        this.pushPage("pages/setting/VideoSettingPage")
       })
 
       this.preferItemBuilder($r('sys.symbol.play_video'), '跨设备续播', () => {
-        router.push({url: "pages/transfer/TransferPage"})
+        this.pushPage("pages/transfer/TransferPage")
       })
 
       this.preferItemBuilder($r('sys.symbol.doc_plaintext'), '跨设备文件流转', () => {
-        router.push({url: "pages/filetransfer/FileTransferPage"})
+        this.pushPage("pages/filetransfer/FileTransferPage")
       })
 
       this.preferItemBuilder($r('sys.symbol.message'), $r('app.string.prefer_about'), () => {
-        router.push({url: "pages/about/AboutPage"})
+        this.pushPage("pages/about/AboutPage")
       })
 
       this.preferItemBuilder($r('sys.symbol.doc_plaintext'), $r('app.string.prefer_privacy'), () => {
-        router.push({url: "pages/legal/PrivacyPolicyPage"})
+        this.pushPage("pages/legal/PrivacyPolicyPage")
       })
 
       this.preferItemBuilder($r('sys.symbol.doc_plaintext'), '用户协议', () => {
-        router.push({url: "pages/legal/UserAgreementPage"})
+        this.pushPage("pages/legal/UserAgreementPage")
       })
 
       this.preferItemBuilder($r('sys.symbol.doc_plaintext'), '权限说明', () => {
-        router.push({url: "pages/legal/PermissionNoticePage"})
+        this.pushPage("pages/legal/PermissionNoticePage")
       })
 
       this.preferItemBuilder($r('sys.symbol.doc_plaintext'), '开源许可', () => {
-        router.push({url: "pages/legal/OpenSourceNoticePage"})
+        this.pushPage("pages/legal/OpenSourceNoticePage")
       })
 
       Blank()

@@ -1,4 +1,4 @@
-import { display, promptAction, router, window } from '@kit.ArkUI'
+import { display, router, window } from '@kit.ArkUI'
 import { DeviceUtil, Option, OptionDialog } from '@ohpg/fin-framework'
 import { AvoidAreaSystem, FinItem } from '@ohpg/fin-core'
 import { CommonConstants } from '../common/CommonConstants'
@@ -17,6 +17,7 @@ import { FinTransferSession } from '../../entity/FinTransferSession'
 import { TransferSessionCodec } from '../transfer/TransferSessionCodec'
 import { ContinuationStateStore } from '../../continuation/ContinuationStateStore'
 import { ContinuationFileStore } from '../../continuation/ContinuationFileStore'
+import { DeviceCapability } from '../../capability/DeviceCapability'
 
 const SNAPSHOT_LOG_DOMAIN = 0x0000
 const SNAPSHOT_LOG_TAG = 'FinSnapshot'
@@ -72,6 +73,13 @@ struct PlayerPage {
   private uiTimeoutId?: number
 
   @State locked: boolean = false
+
+  private showToast(message: ResourceStr): void {
+    try {
+      this.getUIContext().getPromptAction().showToast({ message: message })
+    } catch (_) {
+    }
+  }
 
   @State capturingSnapshot: boolean = false
 
@@ -169,7 +177,7 @@ struct PlayerPage {
     })
     this.videoController.onError((error) => {
       this.loading = false
-      promptAction.showToast({message: "播放失败，" + error.code + "：" + error.message})
+      this.showToast("播放失败，" + error.code + "：" + error.message)
     })
     this.videoController.onSub((sub) => {
       this.avSub = sub.text
@@ -187,7 +195,7 @@ struct PlayerPage {
       .catch((error: Error) => {
         this.updateItem(undefined)
         this.loading = false
-        promptAction.showToast({message: "加载失败，" + error.message})
+        this.showToast("加载失败，" + error.message)
       })
   }
 
@@ -625,15 +633,17 @@ struct PlayerPage {
               .height(40)
               .onClick((_event, result, error) => {
                 if (result === SaveButtonOnClickResult.SUCCESS) {
+                  if (!DeviceCapability.supportsPhotoAccess()) {
+                    this.showToast('Photo library write is unavailable on this device.')
+                    return
+                  }
                   if (!this.prepared) {
-                    promptAction.showToast({ message: "视频准备好后再截屏" })
+                    this.showToast("视频准备好后再截屏")
                     return
                   }
                   this.captureCurrentFrame()
                 } else {
-                  promptAction.showToast({
-                    message: "保存授权失败：" + (error ? error.message : "请重新点击保存按钮")
-                  })
+                  this.showToast("保存授权失败：" + (error ? error.message : "请重新点击保存按钮"))
                 }
               })
 
@@ -896,6 +906,10 @@ struct PlayerPage {
     if (!this.prepared || this.capturingSnapshot) {
       return
     }
+    if (!DeviceCapability.supportsPhotoAccess()) {
+      this.showToast('Photo library write is unavailable on this device.')
+      return
+    }
     this.capturingSnapshot = true
     let shouldRestoreUi = this.ui
     this.clearUITimeout()
@@ -907,13 +921,13 @@ struct PlayerPage {
         let snapshotImage = await this.packSnapshotImage(pixelMap)
         await this.saveSnapshotToGallery(snapshotImage)
         ContinuationFileStore.savePreviewImage(snapshotImage.fileName, snapshotImage.buffer)
-        promptAction.showToast({ message: "已保存到图库：" + snapshotImage.fileName })
+        this.showToast("已保存到图库：" + snapshotImage.fileName)
       } finally {
         await pixelMap.release()
       }
     } catch (error) {
       hilog.error(SNAPSHOT_LOG_DOMAIN, SNAPSHOT_LOG_TAG, 'Snapshot failed: %{public}s', this.formatSnapshotError(error))
-      promptAction.showToast({ message: "截屏失败：" + this.formatSnapshotError(error) })
+      this.showToast("截屏失败：" + this.formatSnapshotError(error))
     } finally {
       this.ui = shouldRestoreUi
       this.capturingSnapshot = false
@@ -965,6 +979,9 @@ struct PlayerPage {
    * SaveButton 已经给本次点击授予临时写入权限，这里直接提交媒体变更，避免额外的系统保存弹窗。
    */
   private async saveSnapshotToGallery(snapshotImage: SnapshotImage): Promise<void> {
+    if (!DeviceCapability.supportsPhotoAccess()) {
+      throw new Error('Photo library write is unavailable on this device.')
+    }
     hilog.info(SNAPSHOT_LOG_DOMAIN, SNAPSHOT_LOG_TAG, 'Saving snapshot: %{public}s', snapshotImage.fileName)
     let helper = photoAccessHelper.getPhotoAccessHelper(getContext())
     let request = photoAccessHelper.MediaAssetChangeRequest.createAssetRequest(
@@ -1099,7 +1116,7 @@ struct PlayerPage {
     }
     this.seekTo(startPosition)
     this.updateContinuationSession(startPosition)
-    promptAction.showToast({ message: '已从跨设备进度继续播放' })
+    this.showToast('已从跨设备进度继续播放')
   }
 
   private buildTransferSession(position?: number): FinTransferSession | undefined {
@@ -1128,16 +1145,20 @@ struct PlayerPage {
   private async copyTransferSession(): Promise<void> {
     let session = this.buildTransferSession()
     if (!session || !this.videoController.player) {
-      promptAction.showToast({ message: '视频准备好后再复制续播码' })
+      this.showToast('视频准备好后再复制续播码')
+      return
+    }
+    if (!DeviceCapability.supportsPasteboard()) {
+      this.showToast('Pasteboard is unavailable. Use manual continuation code entry.')
       return
     }
     try {
       // 续播码只携带媒体 id 和进度；另一台设备仍使用自己的服务器配置拉流。
       let pasteboardData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, TransferSessionCodec.encode(session))
       await pasteboard.getSystemPasteboard().setData(pasteboardData)
-      promptAction.showToast({ message: '续播码已复制，可到另一台设备导入' })
+      this.showToast('续播码已复制，可到另一台设备导入')
     } catch (error) {
-      promptAction.showToast({ message: '复制续播码失败，请重试' })
+      this.showToast('复制续播码失败，请重试')
     }
   }
 

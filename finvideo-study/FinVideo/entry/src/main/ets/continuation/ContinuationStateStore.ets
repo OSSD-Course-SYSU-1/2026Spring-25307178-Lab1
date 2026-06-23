@@ -14,6 +14,7 @@ const WANT_PARAM_FILE_MANIFEST_SIZE = 'mediahub.continuation.fileManifestSize'
 const WANT_PARAM_FILE_COUNT = 'mediahub.continuation.fileCount'
 const CONTINUATION_VERSION = 1
 const PLAYER_SCENE = 'player'
+const MAX_WANT_PARAM_BYTES = 100 * 1024
 
 /**
  * Keeps the video playback state small enough for HarmonyOS application continuation.
@@ -37,9 +38,13 @@ export class ContinuationStateStore {
     if (!session) {
       return false
     }
+    let sessionPayload = ContinuationStateStore.serialize(session)
+    if (ContinuationStateStore.utf8ByteLength(sessionPayload) > MAX_WANT_PARAM_BYTES) {
+      return false
+    }
     wantParam[WANT_PARAM_VERSION] = CONTINUATION_VERSION
     wantParam[WANT_PARAM_SCENE] = PLAYER_SCENE
-    wantParam[WANT_PARAM_SESSION] = ContinuationStateStore.serialize(session)
+    wantParam[WANT_PARAM_SESSION] = sessionPayload
     let manifestAsset = ContinuationFileStore.writeSessionManifest(session)
     if (manifestAsset) {
       wantParam[WANT_PARAM_FILE_MANIFEST] = manifestAsset.fileName
@@ -102,6 +107,24 @@ export class ContinuationStateStore {
 
   private static serialize(session: FinTransferSession): string {
     return JSON.stringify(session)
+  }
+
+  private static utf8ByteLength(payload: string): number {
+    let bytes = 0
+    for (let i = 0; i < payload.length; i++) {
+      let code = payload.charCodeAt(i)
+      if (code <= 0x7F) {
+        bytes += 1
+      } else if (code <= 0x7FF) {
+        bytes += 2
+      } else if (code >= 0xD800 && code <= 0xDBFF) {
+        bytes += 4
+        i++
+      } else {
+        bytes += 3
+      }
+    }
+    return bytes
   }
 
   private static parse(payload?: string): FinTransferSession | undefined {

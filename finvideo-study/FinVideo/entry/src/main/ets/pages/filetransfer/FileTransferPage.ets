@@ -1,5 +1,5 @@
-import { promptAction } from '@kit.ArkUI'
 import { ToolBar } from '@ohpg/fin-framework'
+import { CapabilityStatus, DeviceCapability } from '../../capability/DeviceCapability'
 import { CommonConstants } from '../common/CommonConstants'
 import { WirelessFileTransferStore, WirelessTransferFile } from './WirelessFileTransferStore'
 
@@ -7,10 +7,12 @@ import { WirelessFileTransferStore, WirelessTransferFile } from './WirelessFileT
 @Component
 struct FileTransferPage {
   @State files: WirelessTransferFile[] = []
+  @State capabilityRows: CapabilityStatus[] = DeviceCapability.transferCapabilityRows()
   @State busy: boolean = false
   @State statusText: string = '选择文件发送后，另一台同账号 HarmonyOS 设备打开本页并刷新即可接收。'
 
   aboutToAppear(): void {
+    this.refreshCapabilityRows()
     this.refreshFiles()
   }
 
@@ -18,7 +20,23 @@ struct FileTransferPage {
     return this.getUIContext().getHostContext()!
   }
 
+  private showToast(message: string): void {
+    try {
+      this.getUIContext().getPromptAction().showToast({ message: message })
+    } catch (_) {
+    }
+  }
+
+  private refreshCapabilityRows(): void {
+    this.capabilityRows = DeviceCapability.transferCapabilityRows()
+  }
+
   private refreshFiles(): void {
+    if (!DeviceCapability.supportsFileIo()) {
+      this.files = []
+      this.statusText = 'File IO is unavailable on this device. Use continuation code as fallback.'
+      return
+    }
     this.files = WirelessFileTransferStore.listFiles(this.getContext())
     this.statusText = this.files.length > 0
       ? `已发现 ${this.files.length} 个可流转文件`
@@ -29,29 +47,41 @@ struct FileTransferPage {
     if (this.busy) {
       return
     }
+    if (!DeviceCapability.supportsFilePicker()) {
+      this.showToast('System file picker is unavailable. Generate a demo file instead.')
+      return
+    }
+    if (!DeviceCapability.supportsFileIo()) {
+      this.showToast('File IO is unavailable on this device.')
+      return
+    }
     this.busy = true
     try {
       let sentFiles = await WirelessFileTransferStore.pickAndSend(this.getContext())
       this.refreshFiles()
       if (sentFiles.length > 0) {
-        promptAction.showToast({ message: `已发送 ${sentFiles.length} 个文件` })
+        this.showToast(`已发送 ${sentFiles.length} 个文件`)
       } else {
-        promptAction.showToast({ message: '未选择文件或发送失败' })
+        this.showToast('未选择文件或发送失败')
       }
     } catch (_) {
-      promptAction.showToast({ message: '选择文件失败，请重试' })
+      this.showToast('选择文件失败，请重试')
     } finally {
       this.busy = false
     }
   }
 
   private createDemoFile(): void {
+    if (!DeviceCapability.supportsFileIo()) {
+      this.showToast('File IO is unavailable on this device.')
+      return
+    }
     let file = WirelessFileTransferStore.createDemoFile(this.getContext())
     this.refreshFiles()
     if (file) {
-      promptAction.showToast({ message: '已生成演示文件' })
+      this.showToast('已生成演示文件')
     } else {
-      promptAction.showToast({ message: '生成演示文件失败' })
+      this.showToast('生成演示文件失败')
     }
   }
 
@@ -59,10 +89,18 @@ struct FileTransferPage {
     if (this.busy) {
       return
     }
+    if (!DeviceCapability.supportsFilePicker()) {
+      this.showToast('System file saver is unavailable on this device.')
+      return
+    }
+    if (!DeviceCapability.supportsFileIo()) {
+      this.showToast('File IO is unavailable on this device.')
+      return
+    }
     this.busy = true
     try {
       let saved = await WirelessFileTransferStore.saveToUserSelectedPath(this.getContext(), file)
-      promptAction.showToast({ message: saved ? '已保存到本机' : '保存已取消或失败' })
+      this.showToast(saved ? '已保存到本机' : '保存已取消或失败')
     } finally {
       this.busy = false
     }
@@ -125,6 +163,36 @@ struct FileTransferPage {
     .alignItems(HorizontalAlign.Start)
   }
 
+  @Builder
+  private capabilityItemBuilder(row: CapabilityStatus) {
+    Column({ space: CommonConstants.SPACE_4 }) {
+      Row({ space: CommonConstants.SPACE_8 }) {
+        Text(row.supported ? 'OK' : 'Fallback')
+          .fontSize(12)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(row.supported ? '#007D40' : '#B36B00')
+        Text(row.name)
+          .fontSize(14)
+          .fontWeight(FontWeight.Medium)
+          .layoutWeight(1)
+          .maxLines(1)
+      }
+      .width(CommonConstants.FULL_PERCENT)
+
+      Text(row.syscap)
+        .fontSize(11)
+        .fontColor($r('sys.color.ohos_id_color_text_secondary'))
+        .width(CommonConstants.FULL_PERCENT)
+        .maxLines(1)
+      Text(row.supported ? 'Direct API path enabled' : row.fallback)
+        .fontSize(12)
+        .fontColor($r('sys.color.ohos_id_color_text_secondary'))
+        .width(CommonConstants.FULL_PERCENT)
+        .maxLines(1)
+    }
+    .width(CommonConstants.FULL_PERCENT)
+  }
+
   build() {
     Column() {
       ToolBar({ title: '跨设备文件流转' })
@@ -141,6 +209,21 @@ struct FileTransferPage {
             .width(CommonConstants.FULL_PERCENT)
         }
         .width(CommonConstants.FULL_PERCENT)
+        .alignItems(HorizontalAlign.Start)
+
+        Column({ space: CommonConstants.SPACE_8 }) {
+          Text('Device capability')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .width(CommonConstants.FULL_PERCENT)
+          ForEach(this.capabilityRows, (row: CapabilityStatus) => {
+            this.capabilityItemBuilder(row)
+          }, (row: CapabilityStatus) => row.syscap)
+        }
+        .width(CommonConstants.FULL_PERCENT)
+        .padding(CommonConstants.SPACE_16)
+        .backgroundColor($r('sys.color.ohos_id_color_button_normal'))
+        .borderRadius($r('app.float.lg_border_radius'))
         .alignItems(HorizontalAlign.Start)
 
         Row({ space: CommonConstants.SPACE_12 }) {
@@ -168,7 +251,7 @@ struct FileTransferPage {
           .enabled(!this.busy)
           .onClick(() => {
             this.refreshFiles()
-            promptAction.showToast({ message: '已刷新' })
+            this.showToast('已刷新')
           })
 
         Column({ space: CommonConstants.SPACE_8 }) {
